@@ -285,6 +285,7 @@ export const AI_PROVIDERS: AIProviderDef[] = [
     keyURL: 'https://openrouter.ai/keys',
     defaultModel: 'anthropic/claude-sonnet-4.6',
     models: [
+      { id: 'anthropic/claude-opus-4.7', name: 'Claude Opus 4.7', tag: 'Flagship' },
       { id: 'anthropic/claude-sonnet-4.6', name: 'Claude Sonnet 4.6', tag: 'Best for design' },
       { id: 'anthropic/claude-opus-4.6', name: 'Claude Opus 4.6', tag: 'Smartest' },
       { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', tag: 'Reliable' },
@@ -330,6 +331,7 @@ export const AI_PROVIDERS: AIProviderDef[] = [
     keyURL: 'https://console.anthropic.com/settings/keys',
     defaultModel: 'claude-sonnet-4-6-20260301',
     models: [
+      { id: 'claude-opus-4-7', name: 'Claude Opus 4.7', tag: 'Flagship' },
       { id: 'claude-sonnet-4-6-20260301', name: 'Claude Sonnet 4.6', tag: 'Best for design' },
       { id: 'claude-opus-4-6-20260301', name: 'Claude Opus 4.6', tag: 'Smartest' },
       { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', tag: 'Reliable' },
