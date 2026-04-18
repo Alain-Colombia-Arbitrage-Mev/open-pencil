@@ -288,36 +288,21 @@ export const AI_PROVIDERS: AIProviderDef[] = [
       { id: 'anthropic/claude-opus-4.7', name: 'Claude Opus 4.7', tag: 'Flagship' },
       { id: 'anthropic/claude-sonnet-4.6', name: 'Claude Sonnet 4.6', tag: 'Best for design' },
       { id: 'anthropic/claude-opus-4.6', name: 'Claude Opus 4.6', tag: 'Smartest' },
-      { id: 'anthropic/claude-3.5-sonnet', name: 'Claude 3.5 Sonnet', tag: 'Reliable' },
-      { id: 'anthropic/claude-3.5-haiku', name: 'Claude 3.5 Haiku', tag: 'Fast' },
-      { id: 'anthropic/claude-3.7-sonnet', name: 'Claude 3.7 Sonnet', tag: 'Latest' },
+      { id: 'anthropic/claude-3.7-sonnet', name: 'Claude 3.7 Sonnet', tag: 'Reliable' },
       { id: 'anthropic/claude-3.7-sonnet-thinking', name: 'Claude 3.7 + Thinking', tag: 'Reasoning' },
       { id: 'openai/gpt-5.3-codex', name: 'GPT-5.3 Codex', tag: 'Code + Design' },
       { id: 'openai/gpt-4.5', name: 'GPT-4.5', tag: 'Multimodal' },
       { id: 'openai/gpt-4.1', name: 'GPT-4.1', tag: 'Balanced' },
-      { id: 'openai/o3', name: 'o3', tag: 'Reasoning' },
-      { id: 'openai/o4-mini', name: 'o4-mini', tag: 'Fast reasoning' },
-      { id: 'google/gemini-2.5-pro-preview', name: 'Gemini 2.5 Pro', tag: 'Best value' },
-      { id: 'google/gemini-2.5-flash-preview', name: 'Gemini 2.5 Flash', tag: 'Fast + Vision' },
       { id: 'google/gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro', tag: '1M context' },
       { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', tag: 'Fast' },
+      { id: 'google/gemini-2.5-pro-preview', name: 'Gemini 2.5 Pro', tag: 'Best value' },
+      { id: 'google/gemini-2.5-flash-preview', name: 'Gemini 2.5 Flash', tag: 'Fast + Vision' },
+      { id: 'x-ai/grok-4.20', name: 'Grok 4.20', tag: 'Latest' },
+      { id: 'moonshotai/kimi-k2.5', name: 'Kimi K2.5', tag: 'Vision + code' },
+      { id: 'moonshotai/kimi-k2', name: 'Kimi K2', tag: 'Strong vision' },
       { id: 'deepseek/deepseek-v3.2', name: 'DeepSeek V3.2', tag: 'Cheap' },
       { id: 'qwen/qwen3.5-flash-02-23', name: 'Qwen 3.5 Flash', tag: 'Cheap' },
       { id: 'qwen/qwen3-coder:free', name: 'Qwen3 Coder', tag: 'Free' },
-      { id: 'qwen/qwen3-32b', name: 'Qwen3 32B', tag: 'Open' },
-      { id: 'x-ai/grok-4.20', name: 'Grok 4.20', tag: 'Latest' },
-      { id: 'x-ai/grok-2-vision', name: 'Grok 2 Vision', tag: 'Vision' },
-      { id: 'x-ai/grok-2', name: 'Grok 2', tag: 'Fast' },
-      { id: 'moonshotai/kimi-k2.5', name: 'Kimi K2.5', tag: 'Vision + code' },
-      { id: 'moonshotai/kimi-k2', name: 'Kimi K2', tag: 'Strong vision' },
-      { id: 'mistralai/mistral-large', name: 'Mistral Large', tag: 'Europe' },
-      { id: 'meta-llama/llama-3.3-70b-instruct', name: 'Llama 3.3 70B', tag: 'Open' },
-      { id: 'meta-llama/llama-3.1-405b-instruct', name: 'Llama 3.1 405B', tag: 'Open flagship' },
-      { id: 'openai/gpt-oss-120b:free', name: 'GPT-OSS 120B', tag: 'Free' },
-      { id: 'perplexity/perplexity-llama-3.1-sonar-large', name: 'Sonar Large', tag: 'Research' },
-      { id: 'cohere/cohere-command-a', name: 'Command A', tag: 'Enterprise' },
-      { id: 'ai21/jamba-large', name: 'Jamba Large', tag: 'Long context' },
-      { id: 'x-ai/grok-beta', name: 'Grok Beta', tag: 'Creative' },
       { id: 'z-ai/glm-5.1', name: 'GLM-5.1 (OpenRouter)', tag: 'Best' },
       { id: 'google/gemma-4-26b-a4b-it', name: 'Gemma 4 26B A4B Instruct', tag: 'Open' },
       { id: 'nvidia/nemotron-3-super-120b-a12b', name: 'Nemotron 3 Super 120B A12B', tag: 'Open flagship' },
@@ -334,12 +319,10 @@ export const AI_PROVIDERS: AIProviderDef[] = [
       { id: 'claude-opus-4-7', name: 'Claude Opus 4.7', tag: 'Flagship' },
       { id: 'claude-sonnet-4-6-20260301', name: 'Claude Sonnet 4.6', tag: 'Best for design' },
       { id: 'claude-opus-4-6-20260301', name: 'Claude Opus 4.6', tag: 'Smartest' },
-      { id: 'claude-3-5-sonnet-20241022', name: 'Claude 3.5 Sonnet', tag: 'Reliable' },
-      { id: 'claude-3-5-haiku-20241022', name: 'Claude 3.5 Haiku', tag: 'Fast' },
+      { id: 'claude-sonnet-4-5-20250501', name: 'Claude Sonnet 4.5', tag: 'Reliable' },
+      { id: 'claude-haiku-4-5-20250501', name: 'Claude Haiku 4.5', tag: 'Fast' },
       { id: 'claude-3-7-sonnet-20250114', name: 'Claude 3.7 Sonnet', tag: 'Latest' },
-      { id: 'claude-3-7-sonnet-20250114-thinking', name: 'Claude 3.7 + Thinking', tag: 'Reasoning' },
-      { id: 'claude-sonnet-4-5-20250501', name: 'Claude Sonnet 4.5', tag: 'Updated' },
-      { id: 'claude-haiku-4-5-20250501', name: 'Claude Haiku 4.5', tag: 'Fast + Updated' }
+      { id: 'claude-3-7-sonnet-20250114-thinking', name: 'Claude 3.7 + Thinking', tag: 'Reasoning' }
     ]
   },
   {
@@ -352,10 +335,7 @@ export const AI_PROVIDERS: AIProviderDef[] = [
       { id: 'gpt-5.3-codex', name: 'GPT-5.3 Codex', tag: 'Code + Design' },
       { id: 'gpt-4.5', name: 'GPT-4.5', tag: 'Multimodal' },
       { id: 'gpt-4.1', name: 'GPT-4.1', tag: 'Balanced' },
-      { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', tag: 'Fast' },
-      { id: 'o3', name: 'o3', tag: 'Reasoning' },
-      { id: 'o3-mini', name: 'o3-mini', tag: 'Fast reasoning' },
-      { id: 'o4-mini', name: 'o4-mini', tag: 'Small reasoning' }
+      { id: 'gpt-4.1-mini', name: 'GPT-4.1 Mini', tag: 'Fast' }
     ]
   },
   {
@@ -363,14 +343,12 @@ export const AI_PROVIDERS: AIProviderDef[] = [
     name: 'Google AI',
     keyPlaceholder: 'AIza…',
     keyURL: 'https://aistudio.google.com/apikey',
-    defaultModel: 'gemini-2.5-pro-preview-06-05',
+    defaultModel: 'gemini-3.1-pro-preview',
     models: [
-      { id: 'gemini-2.5-pro-preview-06-05', name: 'Gemini 2.5 Pro', tag: 'Best value' },
-      { id: 'gemini-2.5-flash-preview-06-05', name: 'Gemini 2.5 Flash', tag: 'Fast + Vision' },
-      { id: 'gemini-2.0-pro-preview-05-20', name: 'Gemini 2.0 Pro', tag: 'Strong' },
-      { id: 'gemini-2.0-flash-exp', name: 'Gemini 2.0 Flash', tag: 'Fastest' },
       { id: 'gemini-3.1-pro-preview', name: 'Gemini 3.1 Pro', tag: '1M context' },
-      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash', tag: 'Fast' }
+      { id: 'gemini-3-flash-preview', name: 'Gemini 3 Flash', tag: 'Fast' },
+      { id: 'gemini-2.5-pro-preview-06-05', name: 'Gemini 2.5 Pro', tag: 'Best value' },
+      { id: 'gemini-2.5-flash-preview-06-05', name: 'Gemini 2.5 Flash', tag: 'Fast + Vision' }
     ]
   },
   {
@@ -382,17 +360,10 @@ export const AI_PROVIDERS: AIProviderDef[] = [
     models: [
       { id: 'glm-5.1', name: 'GLM-5.1', tag: 'Best' },
       { id: 'glm-5', name: 'GLM-5' },
-      { id: 'glm-5-code', name: 'GLM-5-Code' },
+      { id: 'glm-5-code', name: 'GLM-5-Code', tag: 'Code + Design' },
       { id: 'glm-4.7', name: 'GLM-4.7' },
       { id: 'glm-4.7-flashx', name: 'GLM-4.7-FlashX' },
-      { id: 'glm-4.6', name: 'GLM-4.6' },
-      { id: 'glm-4.5', name: 'GLM-4.5' },
-      { id: 'glm-4.5-x', name: 'GLM-4.5-X' },
-      { id: 'glm-4.5-air', name: 'GLM-4.5-Air' },
-      { id: 'glm-4.5-airx', name: 'GLM-4.5-AirX' },
-      { id: 'glm-4-32b-0414-128k', name: 'GLM-4-32B-0414-128K' },
-      { id: 'glm-4.7-flash', name: 'GLM-4.7-Flash', tag: 'Free' },
-      { id: 'glm-4.5-flash', name: 'GLM-4.5-Flash', tag: 'Free' }
+      { id: 'glm-4.7-flash', name: 'GLM-4.7-Flash', tag: 'Free' }
     ]
   },
   {
@@ -404,11 +375,7 @@ export const AI_PROVIDERS: AIProviderDef[] = [
     models: [
       { id: 'MiniMax-M2.7', name: 'MiniMax-M2.7', tag: 'Best' },
       { id: 'MiniMax-M2.7-highspeed', name: 'MiniMax-M2.7-highspeed', tag: 'Fast' },
-      { id: 'MiniMax-M2.5', name: 'MiniMax-M2.5' },
-      { id: 'MiniMax-M2.5-highspeed', name: 'MiniMax-M2.5 Highspeed', tag: 'Fast' },
-      { id: 'MiniMax-M2.1', name: 'MiniMax-M2.1' },
-      { id: 'MiniMax-M2.1-highspeed', name: 'MiniMax-M2.1 Highspeed', tag: 'Fast' },
-      { id: 'MiniMax-M2', name: 'MiniMax-M2' }
+      { id: 'MiniMax-M2.5', name: 'MiniMax-M2.5' }
     ]
   },
   {
