@@ -1,5 +1,7 @@
 <script setup lang="ts">
-defineProps<{
+defineOptions({ inheritAttrs: false })
+
+const { class: classProp, columns, gap } = defineProps<{
   class?: string
   columns?: number
   gap?: number
@@ -9,10 +11,10 @@ defineProps<{
 <template>
   <div
     class="bento-grid"
-    :class="props.class"
+    :class="classProp"
     :style="{
-      '--bento-columns': props.columns ?? 3,
-      '--bento-gap': props.gap ?? 16 + 'px'
+      '--bento-columns': columns ?? 3,
+      '--bento-gap': (gap ?? 16) + 'px'
     }"
   >
     <slot />

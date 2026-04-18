@@ -1,32 +1,25 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-const props = withDefaults(
-  defineProps<{
-    class?: string
-    size?: number
-    duration?: number
-    color?: string[]
-    cornerRadius?: number
-  }>(),
-  {
-    class: '',
-    size: 300,
-    duration: 2000,
-    color: () => ['#3B82F6', '#8B5CF6', '#EC4899', '#F59E0B'],
-    cornerRadius: 8
-  }
-)
+defineOptions({ inheritAttrs: false })
+
+const { class: classProp, size = 300, duration = 2000, cornerRadius = 8 } = defineProps<{
+  class?: string
+  size?: number
+  duration?: number
+  color?: string[]
+  cornerRadius?: number
+}>()
 
 const style = computed(() => ({
-  '--beam-size': `${props.size}px`,
-  '--beam-duration': `${props.duration}ms`,
-  '--beam-corner': `${props.cornerRadius}px`
+  '--beam-size': `${size}px`,
+  '--beam-duration': `${duration}ms`,
+  '--beam-corner': `${cornerRadius}px`
 }))
 </script>
 
 <template>
-  <span class="border-beam-container relative inline-block" :class="props.class" :style="style">
+  <span class="border-beam-container relative inline-block" :class="classProp" :style="style">
     <slot />
     <span class="border-beam absolute inset-0 pointer-events-none" />
   </span>
@@ -43,12 +36,12 @@ const style = computed(() => ({
   border-radius: var(--beam-corner, 8px);
   padding: 2px;
   background: linear-gradient(
-    var(--beam-angle, 0deg),
-    var(--beam-color-1, #3B82F6),
-    var(--beam-color-2, #8B5CF6),
-    var(--beam-color-3, #EC4899),
-    var(--beam-color-4, #F59E0B),
-    var(--beam-color-1, #3B82F6)
+    0deg,
+    #3B82F6,
+    #8B5CF6,
+    #EC4899,
+    #F59E0B,
+    #3B82F6
   );
   background-size: 300% 300%;
   -webkit-mask: 
@@ -75,23 +68,15 @@ const style = computed(() => ({
 @keyframes beam-rotate {
   0% {
     background-position: 0% 50%;
-    --beam-angle: 0deg;
   }
   33% {
-    --beam-color-1: #8B5CF6;
-    --beam-color-2: #EC4899;
-    --beam-color-3: #F59E0B;
-    --beam-color-4: #3B82F6;
+    background-position: 33% 50%;
   }
   66% {
-    --beam-color-1: #EC4899;
-    --beam-color-2: #F59E0B;
-    --beam-color-3: #3B82F6;
-    --beam-color-4: #8B5CF6;
+    background-position: 66% 50%;
   }
   100% {
     background-position: 100% 50%;
-    --beam-angle: 360deg;
   }
 }
 </style>

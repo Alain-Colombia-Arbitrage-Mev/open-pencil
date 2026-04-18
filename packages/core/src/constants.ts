@@ -125,6 +125,130 @@ export const ACP_AGENTS: ACPAgentDef[] = [
   }
 ]
 
+export interface StylePreset {
+  id: string
+  name: string
+  description: string
+  promptSuffix: string
+}
+
+export const STYLE_PRESETS: StylePreset[] = [
+  {
+    id: 'auto',
+    name: 'Auto (AI decides)',
+    description: 'Let the model pick a palette and style based on the brief.',
+    promptSuffix: ''
+  },
+  {
+    id: 'stripe',
+    name: 'Stripe',
+    description: 'Navy + violet, gradient skies, serif-adjacent sans. Fintech premium.',
+    promptSuffix: `STYLE PRESET: Stripe.
+- Palette: bg #0A2540 or #FFFFFF, text #0A2540, muted #425466, border #E3E8EE, primary accent #635BFF, secondary accent #00D4FF.
+- Font: Inter for all. Display size 56-96, tight letterSpacing -1 to -2.
+- Heroes use a gradient sky (blur 120+ overlapping radial glows #635BFF + #00D4FF at 35-50% opacity on dark navy).
+- Buttons: rounded 24 (pill), 48h, px 24. Primary bg #635BFF, text #FFFFFF.
+- Cards: white bg, 1px #E3E8EE border, rounded 16, p 32.
+- ALWAYS prefer recipes with style "stripe" — list_recipes({ style: "stripe" }).`
+  },
+  {
+    id: 'linear',
+    name: 'Linear',
+    description: 'Near-black bg, #5E6AD2 accent, huge displays, tight tracking. Dev tools.',
+    promptSuffix: `STYLE PRESET: Linear.
+- Palette: bg #08090A, surface #101114 / #1F2024, text #F4F5F8, muted #8A8F98, border #FFFFFF0D, accent #5E6AD2, secondary #00C7B7.
+- Font: Inter. Display 72-96, letterSpacing -2 to -4, lineHeight tight (same as size).
+- Minimal — no gradients, no decorative shapes. Dark-mode native.
+- Buttons: rounded 8, 44h, px 20. Primary is WHITE (#F4F5F8) with dark text.
+- Borders: 1px #FFFFFF0D (barely visible), used on nav bottom + cards + inputs.
+- Badges: pill (rounded 999), small dot + label, bg #1F2024.
+- ALWAYS prefer recipes with style "linear".`
+  },
+  {
+    id: 'vercel',
+    name: 'Vercel',
+    description: 'Pure black/white minimalism, geometric sans, #0070F3 blue accent.',
+    promptSuffix: `STYLE PRESET: Vercel.
+- Palette: bg #FAFAFA or #0A0A0A, surface #FFFFFF / #171717, text #0A0A0A / #FFFFFF, muted #71717A / #A1A1AA, border #F4F4F5 / #27272A, accent #0070F3, secondary #7928CA.
+- Font: Geist (fallback Inter). Display 48-64.
+- Bento grids with VARYING cell sizes, rounded 16, 1px borders.
+- Icons are Lucide, 24-28 size, bg badge 48×48 rounded 12 with 14% alpha bg.
+- CTA gradient cards use radial glows #0070F3 + #7928CA on pure black bg 24 rounded.
+- ALWAYS prefer recipes with style "vercel".`
+  },
+  {
+    id: 'notion',
+    name: 'Notion',
+    description: 'Warm beige, dark charcoal text, playful serif display. Docs & tools.',
+    promptSuffix: `STYLE PRESET: Notion.
+- Palette: bg #F7F6F3, surface #FFFFFF, text #191918, muted #787672, border #E3E2DF, accent #2F80ED, warning #E03E3E, highlight #FFF4B8.
+- Font: Inter for body, "Lora" or "Source Serif" for display/quotes.
+- Feel: warm, inviting. Use emoji-ish icons (but still Lucide).
+- Inline callouts with tinted backgrounds (10-14% alpha).
+- Cards: white bg, 1px #E3E2DF, rounded 8, p 24.
+- Hover states subtle (10% darker bg).`
+  },
+  {
+    id: 'apple',
+    name: 'Apple HIG',
+    description: 'Pristine whites, #1D1D1F near-black, #0071E3 signature blue. iOS / mac.',
+    promptSuffix: `STYLE PRESET: Apple Human Interface.
+- Palette: bg #FFFFFF / #000000, surface #F5F5F7 / #1D1D1F, text #1D1D1F / #F5F5F7, muted #86868B, separator #D2D2D7, accent #0071E3.
+- Font: SF Pro (fallback "Inter"). Display 34-64 bold tight tracking.
+- Generous whitespace. 20-32px margins on mobile (390w), 48-96 on desktop.
+- iOS buttons: rounded 14, 52h, px 24. CTA primary blue, secondary text-only.
+- Tabs and toolbars use translucent bg (#FFFFFFF5) with 0.5px #E5E5EA hairline.
+- Images/heroes fill edge-to-edge with 24 rounded.
+- ALWAYS prefer recipes with style "apple" for mobile.`
+  },
+  {
+    id: 'editorial',
+    name: 'Editorial',
+    description: 'Cream/ivory bg, serif displays, amber accent. News, luxury, lifestyle.',
+    promptSuffix: `STYLE PRESET: Editorial / Magazine.
+- Palette: bg #F7F3EE, surface #FFFFFF, text #0F1923, muted #5C5044, border #E0D4C8, accent #C4A57B, secondary #D4382C.
+- Font: "Playfair Display" / "Fraunces" / "Instrument Serif" for H1-H3 (display 48-80, letterSpacing -0.5 to -1). "Georgia" / "Source Serif" for body (size 16-18, lineHeight 28-32).
+- Thin rules instead of cards: 1-2px horizontal rules in #C4A57B separate content.
+- Categories as uppercase tiny labels with letterSpacing 2+ in muted gold.
+- Oversized hero images, split 60/40 with text.
+- ALWAYS prefer recipes with style "editorial".`
+  },
+  {
+    id: 'fintech',
+    name: 'Fintech premium',
+    description: 'Deep navy/emerald + gold accent, serif display. Banking, trading.',
+    promptSuffix: `STYLE PRESET: Fintech premium.
+- Palette: bg #0A1628 or #0F1F1A, surface #13233E / #1A2F2A, text #F5F3EE / #F0EDE5, muted #8B94A6 / #7E8F87, border #1F2E47 / #243631, accent #D4B87A (gold) or #3D8B6E (emerald), success #4ADE80, warning #E8C547.
+- Font: "Instrument Serif" or "Fraunces" for display (48-80, letterSpacing -0.5), "Inter" for body.
+- Balance cards use dark bg + subtle gold radial glow (opacity 25%, blur 80).
+- Numbers are large and precise. Use tabular-nums feel (letterSpacing -0.5 on large numerals).
+- Icons in circular bg 36-44 with tinted surface (#13233E).
+- ALWAYS prefer recipes with style "fintech".`
+  },
+  {
+    id: 'playful',
+    name: 'Playful',
+    description: 'Saturated primaries, chunky rounded sans, generous rounding. Kids, consumer.',
+    promptSuffix: `STYLE PRESET: Playful.
+- Palette: bg #FFFBF0, surface #FFFFFF, text #1A1A2E, muted #5D5F7A, border #FFE5C4, accents rotate: #FF6B6B (coral) #4ECDC4 (turquoise) #FCD34D (yellow) #A78BFA (violet).
+- Font: "Fredoka" / "Sora" / "Plus Jakarta Sans". Display 48-72 bold but rounded.
+- Cards rounded 24-32, buttons rounded 999 (pills), 56h tall.
+- Illustrations via simple geometric shapes with bold fills.
+- Strokes are absent or thick (3-4px).`
+  },
+  {
+    id: 'brutalist',
+    name: 'Brutalist',
+    description: 'High contrast, heavy borders, monospace, no rounding. Counterculture.',
+    promptSuffix: `STYLE PRESET: Brutalist.
+- Palette: bg #FFFFFF or #FAFAFA, surface #FFFFFF, text #000000, muted #525252, border #000000 (thick!), accent rotates: #FF0000 / #FFFF00 / #00FF00.
+- Font: "JetBrains Mono" / "IBM Plex Mono" monospace for display, "Space Grotesk" for body.
+- Hard edges — rounded 0 on everything. 2-4px black borders.
+- Oversized type, left-aligned, no letterSpacing tweaks.
+- No shadows, no gradients, no blur. Solid color blocks only.`
+  }
+]
+
 export type AIProviderID =
   | 'openrouter'
   | 'anthropic'
@@ -180,6 +304,7 @@ export const AI_PROVIDERS: AIProviderDef[] = [
       { id: 'qwen/qwen3.5-flash-02-23', name: 'Qwen 3.5 Flash', tag: 'Cheap' },
       { id: 'qwen/qwen3-coder:free', name: 'Qwen3 Coder', tag: 'Free' },
       { id: 'qwen/qwen3-32b', name: 'Qwen3 32B', tag: 'Open' },
+      { id: 'x-ai/grok-4.20', name: 'Grok 4.20', tag: 'Latest' },
       { id: 'x-ai/grok-2-vision', name: 'Grok 2 Vision', tag: 'Vision' },
       { id: 'x-ai/grok-2', name: 'Grok 2', tag: 'Fast' },
       { id: 'moonshotai/kimi-k2.5', name: 'Kimi K2.5', tag: 'Vision + code' },
@@ -191,7 +316,11 @@ export const AI_PROVIDERS: AIProviderDef[] = [
       { id: 'perplexity/perplexity-llama-3.1-sonar-large', name: 'Sonar Large', tag: 'Research' },
       { id: 'cohere/cohere-command-a', name: 'Command A', tag: 'Enterprise' },
       { id: 'ai21/jamba-large', name: 'Jamba Large', tag: 'Long context' },
-      { id: 'x-ai/grok-beta', name: 'Grok Beta', tag: 'Creative' }
+      { id: 'x-ai/grok-beta', name: 'Grok Beta', tag: 'Creative' },
+      { id: 'z-ai/glm-5.1', name: 'GLM-5.1 (OpenRouter)', tag: 'Best' },
+      { id: 'google/gemma-4-26b-a4b-it', name: 'Gemma 4 26B A4B Instruct', tag: 'Open' },
+      { id: 'nvidia/nemotron-3-super-120b-a12b', name: 'Nemotron 3 Super 120B A12B', tag: 'Open flagship' },
+      { id: 'minimax/minimax-m2.7', name: 'MiniMax M2.7 (OpenRouter)', tag: 'Long context' }
     ]
   },
   {

@@ -10,9 +10,13 @@ import { useInputUI } from '@/components/ui/input'
 import { useAIChat } from '@/composables/use-chat'
 import { useI18n } from '@open-pencil/vue'
 
-import { ACP_AGENTS } from '@open-pencil/core'
+import { ACP_AGENTS, STYLE_PRESETS } from '@open-pencil/core'
 
-const { providerID, providerDef, modelID, customModelID } = useAIChat()
+const { providerID, providerDef, modelID, customModelID, stylePresetID } = useAIChat()
+
+const activeStylePreset = computed(
+  () => STYLE_PRESETS.find((p) => p.id === stylePresetID.value) ?? STYLE_PRESETS[0]
+)
 const { dialogs } = useI18n()
 
 const { status } = defineProps<{
@@ -20,11 +24,55 @@ const { status } = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  submit: [text: string]
+  submit: [text: string, files?: File[]]
   stop: []
 }>()
 
 const input = ref('')
+const attachedFiles = ref<File[]>([])
+const fileInputRef = ref<HTMLInputElement>()
+
+function openFilePicker() {
+  fileInputRef.value?.click()
+}
+
+function handleFileSelect(e: Event) {
+  const target = e.target as HTMLInputElement
+  const files = target.files
+  if (!files) return
+  for (const file of Array.from(files)) {
+    if (file.type.startsWith('image/')) attachedFiles.value.push(file)
+  }
+  target.value = ''
+}
+
+function removeFile(index: number) {
+  attachedFiles.value.splice(index, 1)
+}
+
+function filePreviewUrl(file: File): string {
+  return URL.createObjectURL(file)
+}
+
+function handlePaste(e: ClipboardEvent) {
+  const items = e.clipboardData?.items
+  if (!items) return
+  for (const item of Array.from(items)) {
+    if (item.kind !== 'file' || !item.type.startsWith('image/')) continue
+    const file = item.getAsFile()
+    if (!file) continue
+    attachedFiles.value.push(file)
+    e.preventDefault()
+  }
+}
+
+function handleDrop(e: DragEvent) {
+  const files = e.dataTransfer?.files
+  if (!files) return
+  for (const file of Array.from(files)) {
+    if (file.type.startsWith('image/')) attachedFiles.value.push(file)
+  }
+}
 
 const isStreaming = computed(() => status === 'streaming' || status === 'submitted')
 const isACPProvider = computed(() => providerID.value.startsWith('acp:'))
@@ -44,9 +92,11 @@ const selectedModelName = computed(() => {
 function handleSubmit(e: Event) {
   e.preventDefault()
   const text = input.value.trim()
-  if (!text) return
-  emit('submit', text)
+  const files = attachedFiles.value
+  if (!text && files.length === 0) return
+  emit('submit', text, files.length > 0 ? [...files] : undefined)
   input.value = ''
+  attachedFiles.value = []
 }
 </script>
 
@@ -74,21 +124,79 @@ function handleSubmit(e: Event) {
           <template #value>{{ selectedModelName }}</template>
         </ProviderModelSelect>
 
-        <div class="ml-auto">
+        <div class="ml-auto flex items-center gap-1">
+          <select
+            v-model="stylePresetID"
+            data-test-id="chat-style-preset"
+            class="h-6 cursor-pointer rounded bg-hover px-1.5 text-[10px] font-medium text-surface outline-none hover:bg-hover/80"
+            :title="activeStylePreset.description"
+          >
+            <option v-for="preset in STYLE_PRESETS" :key="preset.id" :value="preset.id">
+              {{ preset.name }}
+            </option>
+          </select>
           <ProviderSettings />
         </div>
       </div>
 
+      <!-- Attached images preview -->
+      <div
+        v-if="attachedFiles.length > 0"
+        data-test-id="chat-attached-files"
+        class="mb-1.5 flex flex-wrap gap-1.5"
+      >
+        <div
+          v-for="(file, i) in attachedFiles"
+          :key="`${file.name}-${i}`"
+          class="group relative size-14 shrink-0 overflow-hidden rounded-md border border-border bg-hover"
+        >
+          <img :src="filePreviewUrl(file)" :alt="file.name" class="size-full object-cover" />
+          <button
+            type="button"
+            class="absolute right-0.5 top-0.5 flex size-4 items-center justify-center rounded-full bg-black/60 opacity-0 transition-opacity group-hover:opacity-100"
+            :aria-label="`Remove ${file.name}`"
+            @click="removeFile(i)"
+          >
+            <icon-lucide-x class="size-2.5 text-white" />
+          </button>
+        </div>
+      </div>
+
+      <input
+        ref="fileInputRef"
+        type="file"
+        accept="image/*"
+        multiple
+        class="hidden"
+        @change="handleFileSelect"
+      />
+
       <!-- Input form -->
-      <form class="flex gap-1.5" @submit="handleSubmit">
+      <form class="flex gap-1.5" @submit="handleSubmit" @drop.prevent="handleDrop" @dragover.prevent>
+        <Tip :label="'Attach reference image'">
+          <button
+            type="button"
+            data-test-id="chat-attach-button"
+            :class="
+              useButtonUI({
+                tone: 'ghost',
+                shape: 'rounded',
+                size: 'sm',
+                ui: { base: 'shrink-0 border border-border px-2 py-1.5' }
+              }).base
+            "
+            @click="openFilePicker"
+          >
+            <icon-lucide-paperclip class="size-3" />
+          </button>
+        </Tip>
         <input
           v-model="input"
           type="text"
           data-test-id="chat-input"
-          :placeholder="dialogs.describeChange"
+          :placeholder="isStreaming ? dialogs.queueMessage ?? 'Queue a message…' : dialogs.describeChange"
           :class="useInputUI({ ui: { base: 'min-w-0 flex-1 placeholder:text-muted' } }).base"
-          :disabled="isStreaming"
-          @paste.stop
+          @paste.stop="handlePaste"
           @copy.stop
           @cut.stop
         />
@@ -109,7 +217,7 @@ function handleSubmit(e: Event) {
             <icon-lucide-square class="size-3" />
           </button>
         </Tip>
-        <Tip v-else :label="dialogs.sendMessage">
+        <Tip :label="isStreaming ? dialogs.queueMessage ?? 'Queue message' : dialogs.sendMessage">
           <button
             type="submit"
             data-test-id="chat-send-button"
@@ -123,7 +231,8 @@ function handleSubmit(e: Event) {
             "
             :disabled="!input.trim()"
           >
-            <icon-lucide-send class="size-3" />
+            <icon-lucide-list-plus v-if="isStreaming" class="size-3" />
+            <icon-lucide-send v-else class="size-3" />
           </button>
         </Tip>
       </form>

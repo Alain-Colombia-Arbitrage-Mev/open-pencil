@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-defineProps<{
+defineOptions({ inheritAttrs: false })
+
+const { class: classProp } = defineProps<{
   class?: string
 }>()
 
@@ -25,7 +27,7 @@ function createRipple(event: MouseEvent) {
 <template>
   <button
     class="ripple-button relative overflow-hidden"
-    :class="props.class"
+    :class="classProp"
     @click="createRipple"
   >
     <slot />

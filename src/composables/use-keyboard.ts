@@ -15,11 +15,21 @@ import { openFileDialog } from './use-menu'
 import type { ComputedRef } from 'vue'
 
 function isEditing(e: Event) {
-  return e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
+  const t = e.target
+  if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement) return true
+  if (t instanceof HTMLElement && t.isContentEditable) return true
+  return false
 }
 
 function isInputElement(el: EventTarget | null | undefined): boolean {
-  return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return true
+  if (el instanceof HTMLElement && el.isContentEditable) return true
+  return false
+}
+
+function hasDomTextSelection() {
+  const sel = window.getSelection?.()
+  return !!sel && !sel.isCollapsed && sel.toString().length > 0
 }
 
 const NUDGE_DELTAS: Partial<Record<string, [number, number]>> = {
@@ -123,13 +133,13 @@ export function useKeyboard() {
   // ─── Clipboard ──────────────────────────────────────────────
 
   useEventListener(window, 'copy', (e: ClipboardEvent) => {
-    if (isEditing(e)) return
+    if (isEditing(e) || hasDomTextSelection()) return
     e.preventDefault()
     if (e.clipboardData) void store.writeCopyData(e.clipboardData)
   })
 
   useEventListener(window, 'cut', (e: ClipboardEvent) => {
-    if (isEditing(e)) return
+    if (isEditing(e) || hasDomTextSelection()) return
     e.preventDefault()
     if (e.clipboardData) void store.writeCopyData(e.clipboardData)
     store.deleteSelected()

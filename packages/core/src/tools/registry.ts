@@ -21,7 +21,15 @@ import {
   insertIcon,
   searchIconsTool
 } from './create'
+import {
+  getDesignContract,
+  getDesignSchema,
+  getDesignTokens,
+  validateJsxTool
+} from './anti-hallucinate'
 import { describe } from './describe'
+import { listRecipes, getRecipe } from './design-recipes'
+import { describeForDev, exportFlutter, exportFlowDiagram } from './dev-handoff'
 import {
   setFill,
   setStroke,
@@ -143,6 +151,18 @@ export const CORE_TOOLS: ToolDef[] = [
   batchUpdate,
   // Stock photos
   stockPhoto,
+  // Design recipes (proven patterns from top design teams)
+  listRecipes,
+  getRecipe,
+  // Anti-hallucination (self-documenting schema + validation + contract + tokens)
+  getDesignSchema,
+  getDesignContract,
+  getDesignTokens,
+  validateJsxTool,
+  // Developer handoff (Flutter-ready descriptions + flow diagrams)
+  describeForDev,
+  exportFlutter,
+  exportFlowDiagram,
   // Inspect & utility
   describe,
   calc,

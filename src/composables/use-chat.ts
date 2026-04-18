@@ -8,6 +8,16 @@ import { DirectChatTransport, stepCountIs, ToolLoopAgent } from 'ai'
 import { computed, ref, watch } from 'vue'
 
 import SYSTEM_PROMPT from '@/ai/system-prompt.md?raw'
+import {
+  createSession,
+  deleteSession as deleteSessionEntry,
+  getActiveSessionId,
+  getSession,
+  listSessions,
+  setActiveSessionId,
+  updateSession,
+  type ChatSession
+} from '@/ai/chat-history'
 import { MAX_AGENT_STEPS, createAITools, recordStepUsage, resetRunSteps } from '@/ai/tools'
 import { getActiveEditorStore } from '@/stores/editor'
 import {
@@ -17,6 +27,7 @@ import {
   DEFAULT_AI_PROVIDER,
   IS_BROWSER,
   IS_TAURI,
+  STYLE_PRESETS,
   setPexelsApiKey,
   setUnsplashAccessKey
 } from '@open-pencil/core'
@@ -58,6 +69,7 @@ const customAPIType = useLocalStorage<'completions' | 'responses'>(
   'completions'
 )
 const maxOutputTokens = useLocalStorage(`${STORAGE_PREFIX}ai-max-output-tokens`, 16384)
+const stylePresetID = useLocalStorage(`${STORAGE_PREFIX}ai-style-preset`, 'auto')
 const pexelsApiKey = useLocalStorage(`${STORAGE_PREFIX}pexels-api-key`, '')
 const unsplashAccessKey = useLocalStorage(`${STORAGE_PREFIX}unsplash-access-key`, '')
 const activeTab = ref<'design' | 'code' | 'ai'>('design')
@@ -78,13 +90,15 @@ const isConfigured = computed(() => {
 })
 
 let transportDirty = false
-let currentChatStore: ReturnType<typeof getActiveEditorStore> | null = null
-let currentChatMessages = new WeakMap<ReturnType<typeof getActiveEditorStore>, UIMessage[]>()
+let activeSessionId: string | null = IS_BROWSER ? getActiveSessionId() : null
+const sessionsVersion = ref(0)
 
 function markTransportDirty() {
   transportDirty = true
-  currentChatStore = null
-  currentChatMessages = new WeakMap()
+}
+
+function bumpSessions() {
+  sessionsVersion.value++
 }
 
 watch(
@@ -116,6 +130,7 @@ watch(customModelID, markTransportDirty)
 watch(customAPIType, markTransportDirty)
 watch(apiKey, markTransportDirty)
 watch(customBaseURL, markTransportDirty)
+watch(stylePresetID, markTransportDirty)
 
 function setAPIKey(key: string) {
   apiKey.value = key
@@ -230,9 +245,14 @@ function createTransport(store: ReturnType<typeof getActiveEditorStore>) {
   const tools = createAITools(store)
   const cacheProviderOptions = supportsAnthropicCaching() ? ANTHROPIC_CACHE_CONTROL : undefined
 
+  const preset = STYLE_PRESETS.find((p) => p.id === stylePresetID.value)
+  const fullPrompt = preset?.promptSuffix
+    ? `${SYSTEM_PROMPT}\n\n---\n\n${preset.promptSuffix}`
+    : SYSTEM_PROMPT
+
   const agent = new ToolLoopAgent({
     model: createModel(),
-    instructions: SYSTEM_PROMPT,
+    instructions: fullPrompt,
     tools,
     stopWhen: stepCountIs(MAX_AGENT_STEPS),
     maxOutputTokens: maxOutputTokens.value,
@@ -262,31 +282,88 @@ function createTransport(store: ReturnType<typeof getActiveEditorStore>) {
   return new DirectChatTransport({ agent })
 }
 
+function ensureSession(): ChatSession {
+  let session = activeSessionId ? getSession(activeSessionId) : null
+  if (!session) {
+    session = createSession()
+    activeSessionId = session.id
+    setActiveSessionId(session.id)
+    bumpSessions()
+  }
+  return session
+}
+
 async function ensureChat(): Promise<Chat<UIMessage> | null> {
   if (!isConfigured.value) return null
 
   const store = getActiveEditorStore()
-  if (currentChatStore && chat) {
-    currentChatMessages.set(currentChatStore, chat.messages)
-  }
+  const session = ensureSession()
 
-  if (!chat || transportDirty || currentChatStore !== store) {
-    const messages = currentChatMessages.get(store)
+  if (!chat || transportDirty) {
     const transport = isACPProvider.value ? await createACPTransport() : createTransport(store)
-    chat = new Chat<UIMessage>({ transport, messages })
-    currentChatStore = store
+    chat = new Chat<UIMessage>({ transport, messages: session.messages })
     transportDirty = false
   }
   return chat
 }
 
+function persistCurrentMessages() {
+  if (!chat || !activeSessionId) return
+  updateSession(activeSessionId, chat.messages)
+  bumpSessions()
+}
+
+function startNewChat() {
+  persistCurrentMessages()
+  const session = createSession()
+  activeSessionId = session.id
+  setActiveSessionId(session.id)
+  chat = null
+  transportDirty = true
+  bumpSessions()
+}
+
+function loadChatSession(id: string) {
+  if (id === activeSessionId) return
+  persistCurrentMessages()
+  const session = getSession(id)
+  if (!session) return
+  activeSessionId = id
+  setActiveSessionId(id)
+  chat = null
+  transportDirty = true
+  bumpSessions()
+}
+
+function removeChatSession(id: string) {
+  deleteSessionEntry(id)
+  if (id === activeSessionId) {
+    activeSessionId = null
+    chat = null
+    transportDirty = true
+  }
+  bumpSessions()
+}
+
+function getChatSessions(): ChatSession[] {
+  // depend on version for reactivity
+  void sessionsVersion.value
+  return listSessions()
+}
+
+function currentSessionId(): string | null {
+  void sessionsVersion.value
+  return activeSessionId
+}
+
 function resetChat() {
-  if (currentChatStore) {
-    currentChatMessages.delete(currentChatStore)
+  if (activeSessionId) {
+    deleteSessionEntry(activeSessionId)
+    activeSessionId = null
   }
   chat = null
-  currentChatStore = null
-  transportDirty = false
+  transportDirty = true
+  bumpSessions()
 }
 
 if (IS_BROWSER) {
@@ -306,11 +383,18 @@ export function useAIChat() {
     customModelID,
     customAPIType,
     maxOutputTokens,
+    stylePresetID,
     pexelsApiKey,
     unsplashAccessKey,
     activeTab,
     isConfigured,
     ensureChat,
-    resetChat
+    resetChat,
+    persistCurrentMessages,
+    startNewChat,
+    loadChatSession,
+    removeChatSession,
+    getChatSessions,
+    currentSessionId
   }
 }

@@ -33,4 +33,12 @@ export { createElement } from './mini-react'
 
 export { renderJSX, renderTreeNode, buildComponent } from './render'
 
+export {
+  validateJSX,
+  getSchemaDocument,
+  type ValidationIssue,
+  type ValidationResult,
+  type IssueSeverity
+} from './validate'
+
 export { sceneNodeToJSX, selectionToJSX, type JSXFormat } from '../io/formats/jsx'

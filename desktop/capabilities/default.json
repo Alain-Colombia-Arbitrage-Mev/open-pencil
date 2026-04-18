@@ -11,21 +11,39 @@
     "dialog:allow-open",
     {
       "identifier": "fs:allow-read-file",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        { "path": "$DESKTOP/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DOWNLOAD/**" },
+        { "path": "$PICTURE/**" },
+        { "path": "$APPDATA/**" },
+        { "path": "$APPLOCALDATA/**" },
+        { "path": "$APPCONFIG/**" },
+        { "path": "$TEMP/**" }
+      ]
     },
     {
       "identifier": "fs:allow-write-file",
-      "allow": [{ "path": "**" }]
+      "allow": [
+        { "path": "$DESKTOP/**" },
+        { "path": "$DOCUMENT/**" },
+        { "path": "$DOWNLOAD/**" },
+        { "path": "$PICTURE/**" },
+        { "path": "$APPDATA/**" },
+        { "path": "$APPLOCALDATA/**" },
+        { "path": "$APPCONFIG/**" },
+        { "path": "$TEMP/**" }
+      ]
     },
     "fs:allow-watch",
     "fs:allow-unwatch",
     {
       "identifier": "shell:allow-spawn",
       "allow": [
-        { "name": "claude-agent-acp", "cmd": "claude-agent-acp", "args": true },
-        { "name": "codex-acp", "cmd": "codex-acp", "args": true },
-        { "name": "gemini", "cmd": "gemini", "args": true },
-        { "name": "openpencil-mcp-http", "cmd": "openpencil-mcp-http", "args": true }
+        { "name": "claude-agent-acp", "cmd": "claude-agent-acp", "args": [] },
+        { "name": "codex-acp", "cmd": "codex-acp", "args": [] },
+        { "name": "gemini", "cmd": "gemini", "args": ["--acp"] },
+        { "name": "openpencil-mcp-http", "cmd": "openpencil-mcp-http", "args": [] }
       ]
     },
     "shell:allow-stdin-write",
