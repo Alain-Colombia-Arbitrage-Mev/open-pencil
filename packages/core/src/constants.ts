@@ -297,7 +297,6 @@ export const AI_PROVIDERS: AIProviderDef[] = [
       { id: 'google/gemini-3-flash-preview', name: 'Gemini 3 Flash', tag: 'Fast' },
       { id: 'google/gemini-2.5-pro-preview', name: 'Gemini 2.5 Pro', tag: 'Best value' },
       { id: 'google/gemini-2.5-flash-preview', name: 'Gemini 2.5 Flash', tag: 'Fast + Vision' },
-      { id: 'x-ai/grok-4.20', name: 'Grok 4.20', tag: 'Latest' },
       { id: 'moonshotai/kimi-k2.5', name: 'Kimi K2.5', tag: 'Vision + code' },
       { id: 'moonshotai/kimi-k2', name: 'Kimi K2', tag: 'Strong vision' },
       { id: 'deepseek/deepseek-v3.2', name: 'DeepSeek V3.2', tag: 'Cheap' },
