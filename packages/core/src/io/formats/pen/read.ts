@@ -11,18 +11,24 @@ import {
   convertFill,
   convertStroke,
   isVarRef,
+  type PenDocument,
+  type PenNode,
+  type VarContext
+} from './convert'
+import {
   mapAlignItems,
+  mapConstraint,
   mapFontWeight,
   mapJustifyContent,
   mapLayoutMode,
   mapNodeType,
   mapTextAlign,
   mapTextAlignVertical,
-  parseSize,
-  type PenDocument,
-  type PenNode,
-  type VarContext
-} from './convert'
+  mapTextAutoResize,
+  mapTextCase,
+  mapTextDecoration,
+  parseSize
+} from './mappers'
 
 import type { LayoutMode, LayoutSizing, SceneNode, VectorNetwork } from '../../../scene-graph'
 
@@ -72,7 +78,9 @@ function buildBaseOverrides(pen: PenNode): Partial<SceneNode> {
     flipX: pen.flipX ?? false,
     flipY: pen.flipY ?? false,
     clipsContent: pen.clip ?? false,
-    boundVariables: {}
+    boundVariables: {},
+    horizontalConstraint: mapConstraint(pen.horizontalConstraint),
+    verticalConstraint: mapConstraint(pen.verticalConstraint)
   }
 }
 
@@ -91,6 +99,17 @@ function applyAutoLayout(
     typeof pen.gap === 'string' && isVarRef(pen.gap) && ctx
       ? ctx.resolveNumber(pen.gap)
       : ((pen.gap ?? 0) as number)
+
+  if (pen.rowGap !== undefined) {
+    overrides.counterAxisSpacing =
+      typeof pen.rowGap === 'string' && isVarRef(pen.rowGap) && ctx
+        ? ctx.resolveNumber(pen.rowGap)
+        : (pen.rowGap as number)
+  }
+
+  if (pen.wrap) {
+    overrides.layoutWrap = 'WRAP'
+  }
 
   if (layoutMode === 'VERTICAL') {
     overrides.primaryAxisSizing = heightSizing
@@ -113,11 +132,13 @@ function applyTextProps(node: SceneNode, pen: PenNode, ctx: VarContext): void {
   )
   node.textAlignHorizontal = mapTextAlign(pen.textAlign)
   node.textAlignVertical = mapTextAlignVertical(pen.textAlignVertical)
+  node.textDecoration = mapTextDecoration(pen.textDecoration)
+  node.textCase = mapTextCase(pen.textCase)
   if (pen.lineHeight !== undefined) {
     node.lineHeight = pen.lineHeight < 5 ? pen.lineHeight * node.fontSize : pen.lineHeight
   }
   if (pen.letterSpacing !== undefined) node.letterSpacing = pen.letterSpacing
-  node.textAutoResize = pen.textGrowth === 'fixed-width' ? 'HEIGHT' : 'WIDTH_AND_HEIGHT'
+  node.textAutoResize = mapTextAutoResize(pen.textGrowth)
   if (pen.fontFamily && isVarRef(pen.fontFamily)) {
     bindIfVar(node, 'fontFamily', pen.fontFamily, ctx)
   }
@@ -125,14 +146,15 @@ function applyTextProps(node: SceneNode, pen: PenNode, ctx: VarContext): void {
 
 function resolveSizing(pen: PenNode, ctx: VarContext) {
   const isTextLike = pen.type === 'text' || pen.type === 'icon_font'
+  const isGroupLike = pen.type === 'group'
   const defaultSize = isTextLike ? 20 : 100
   const defaultW = isTextLike && pen.width === undefined ? 10_000 : defaultSize
   const w = parseSize(pen.width, defaultW, ctx)
   const h = parseSize(pen.height, defaultSize, ctx)
   const layout = mapLayoutMode(pen)
 
-  if (pen.width === undefined && layout !== 'NONE') w.sizing = 'HUG'
-  if (pen.height === undefined && layout !== 'NONE') h.sizing = 'HUG'
+  if (pen.width === undefined && (layout !== 'NONE' || isGroupLike)) w.sizing = 'HUG'
+  if (pen.height === undefined && (layout !== 'NONE' || isGroupLike)) h.sizing = 'HUG'
 
   return { w, h, layout, isTextLike }
 }
@@ -217,6 +239,16 @@ function applyTheme(theme: Record<string, string>, ctx: VarContext): void {
   if (themeName) ctx.setActiveTheme(themeName)
 }
 
+function applyStarProps(node: SceneNode, pen: PenNode): void {
+  if (pen.type === 'star') {
+    node.pointCount = pen.points ?? 5
+    node.starInnerRadius = pen.innerRadius ?? 0.4
+  }
+  if (pen.type === 'polygon') {
+    node.pointCount = pen.points ?? 6
+  }
+}
+
 // eslint-disable-next-line complexity -- .pen node mapping touches many format-specific fields
 function createSceneNode(
   pen: PenNode,
@@ -243,13 +275,15 @@ function createSceneNode(
     applyAutoLayout(overrides, layout, pen, widthSizing, heightSizing, ctx)
   }
 
-  const node = graph.createNode(mapNodeType(pen), parentId, overrides)
+  const nodeType = mapNodeType(pen)
+  const node = graph.createNode(nodeType, parentId, overrides)
 
   if (pen.fill !== undefined) node.fills = convertFill(pen.fill, ctx, node)
   if (pen.stroke) node.strokes = convertStroke(pen.stroke, ctx, node)
   node.effects = convertEffects(pen.effect)
   applyCornerRadius(node, pen.cornerRadius, ctx)
   applyPadding(node, pen.padding, ctx)
+  applyStarProps(node, pen)
 
   if (isTextLike) {
     applyTextProps(node, pen, ctx)
@@ -264,6 +298,10 @@ function createSceneNode(
     const vectorNetwork = parseSVGPath(pen.geometry)
     node.vectorNetwork = vectorNetwork
     scaleVectorNetwork(vectorNetwork, node.width, node.height)
+  }
+
+  if (nodeType === 'LINE') {
+    node.height = Math.max((pen.stroke?.thickness as number | undefined) ?? 1, 1)
   }
 
   if (parentLayout !== 'NONE') {
@@ -340,22 +378,59 @@ function findCloneByNameFallback(
   return matches.length === 1 ? matches[0] : undefined
 }
 
+function applyOverrideVisuals(target: SceneNode, overrideData: Partial<PenNode>, ctx: VarContext): void {
+  if (overrideData.fill !== undefined) target.fills = convertFill(overrideData.fill, ctx, target)
+  if (overrideData.stroke !== undefined) target.strokes = convertStroke(overrideData.stroke, ctx, target)
+  if (overrideData.effect !== undefined) target.effects = convertEffects(overrideData.effect)
+  if (overrideData.cornerRadius !== undefined) applyCornerRadius(target, overrideData.cornerRadius, ctx)
+}
+
+function applyOverrideText(target: SceneNode, overrideData: Partial<PenNode>, ctx: VarContext): void {
+  if (overrideData.content !== undefined) target.text = overrideData.content
+  if (overrideData.fontFamily !== undefined) target.fontFamily = resolveFontFamily(overrideData.fontFamily, ctx)
+  if (overrideData.fontSize !== undefined) target.fontSize = overrideData.fontSize
+  if (overrideData.fontWeight !== undefined) target.fontWeight = mapFontWeight(overrideData.fontWeight)
+  if (overrideData.letterSpacing !== undefined) target.letterSpacing = overrideData.letterSpacing
+  if (overrideData.lineHeight !== undefined) target.lineHeight = overrideData.lineHeight
+  if (overrideData.textDecoration !== undefined) target.textDecoration = mapTextDecoration(overrideData.textDecoration)
+  if (overrideData.textCase !== undefined) target.textCase = mapTextCase(overrideData.textCase)
+}
+
+function applyOverrideTransform(target: SceneNode, overrideData: Partial<PenNode>, ctx: VarContext): void {
+  if (overrideData.x !== undefined) target.x = overrideData.x
+  if (overrideData.y !== undefined) target.y = overrideData.y
+  if (overrideData.enabled !== undefined) target.visible = overrideData.enabled
+  if (overrideData.opacity !== undefined) target.opacity = overrideData.opacity
+  if (overrideData.flipX !== undefined) target.flipX = overrideData.flipX
+  if (overrideData.flipY !== undefined) target.flipY = overrideData.flipY
+  if (overrideData.rotation !== undefined) target.rotation = overrideData.rotation
+  if (overrideData.name !== undefined) target.name = overrideData.name
+  if (overrideData.width !== undefined)
+    target.width = parseSize(overrideData.width, target.width, ctx).value
+  if (overrideData.height !== undefined)
+    target.height = parseSize(overrideData.height, target.height, ctx).value
+}
+
+function applyOverrideLayout(target: SceneNode, overrideData: Partial<PenNode>, ctx: VarContext): void {
+  if (overrideData.layout === undefined) return
+  const mode = mapLayoutMode(overrideData as PenNode)
+  if (mode === 'NONE') return
+  target.layoutMode = mode
+  if (overrideData.gap !== undefined) {
+    target.itemSpacing = typeof overrideData.gap === 'number' ? overrideData.gap : 0
+  }
+  if (overrideData.padding !== undefined) applyPadding(target, overrideData.padding, ctx)
+}
+
 function applyOverrideProps(
   target: SceneNode,
   overrideData: Partial<PenNode>,
   ctx: VarContext
 ): void {
-  if (overrideData.fill !== undefined) target.fills = convertFill(overrideData.fill, ctx, target)
-  if (overrideData.content !== undefined) target.text = overrideData.content
-  if (overrideData.x !== undefined) target.x = overrideData.x
-  if (overrideData.y !== undefined) target.y = overrideData.y
-  if (overrideData.enabled !== undefined) target.visible = overrideData.enabled
-  if (overrideData.width !== undefined)
-    target.width = parseSize(overrideData.width, target.width, ctx).value
-  if (overrideData.height !== undefined)
-    target.height = parseSize(overrideData.height, target.height, ctx).value
-  if (overrideData.rotation !== undefined) target.rotation = overrideData.rotation
-  if (overrideData.name !== undefined) target.name = overrideData.name
+  applyOverrideVisuals(target, overrideData, ctx)
+  applyOverrideText(target, overrideData, ctx)
+  applyOverrideTransform(target, overrideData, ctx)
+  applyOverrideLayout(target, overrideData, ctx)
 }
 
 function populateInstances(graph: SceneGraph): void {

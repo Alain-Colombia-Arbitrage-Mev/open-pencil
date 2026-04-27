@@ -149,9 +149,10 @@ export const getDesignTokens = defineTool({
     }
 
     // eslint-disable-next-line complexity -- token scanner walks many json fields
-    function visit(node: ReturnType<typeof figma.getNodeById>): void {
+    function visit(nodeId: string): void {
+      const node = figma.getNodeById(nodeId)
       if (!node) return
-      const json: Record<string, unknown> = node.toJSON(0)
+      const json: Record<string, unknown> = node.toJSON()
 
       const fills = json.fills as Array<Record<string, unknown>> | undefined
       if (Array.isArray(fills)) {
@@ -189,11 +190,11 @@ export const getDesignTokens = defineTool({
 
       const childIds = (json.children as Array<{ id: string }> | undefined) ?? []
       for (const child of childIds) {
-        visit(figma.getNodeById(child.id))
+        visit(child.id)
       }
     }
 
-    visit(page)
+    visit(pageId)
 
     const toArray = <K extends string | number>(
       m: Map<K, number>,

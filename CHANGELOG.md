@@ -8,6 +8,8 @@
 
 - Add explicit `.pen` to Figma-compatible `.fig` conversion coverage and label `.fig` exports as Figma-compatible documents.
 - Add GPT-5.5 model presets for OpenRouter and OpenAI, and strengthen the AI redesign workflow for improving imported Pencil/Figma documents.
+- Fix 24 conversion gaps in .pen importer: gradient fills, image fills, padding CSS shorthand, blur effects, per-side strokes, textDecoration, textCase, layout wrap, Line/Star/Polygon/Group/Section types, constraints, textAutoResize, dashPattern, expanded overrides.
+- Fix `get_design_tokens` traversal bug — `node.toJSON(0)` returned `childCount` instead of children, so token scanner never visited child nodes.
 - Add stdio transport for MCP server — `openpencil-mcp` now works as a proper stdio MCP server for Claude Code, Cursor, etc. HTTP server available as `openpencil-mcp-http`.
 
 ### Fixes

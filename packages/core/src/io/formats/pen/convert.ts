@@ -1,21 +1,20 @@
 import { parseColor } from '../../../color'
 import { generateId } from '../../../scene-graph'
 
+import {
+  mapStrokeJoin,
+  mapStrokeCap,
+  parseSize
+} from './mappers'
+
 import type {
   Color,
   Effect,
   Fill,
-  LayoutAlign,
-  LayoutCounterAlign,
-  LayoutMode,
-  LayoutSizing,
-  NodeType,
+  GradientStop,
   SceneGraph,
   SceneNode,
   Stroke,
-  StrokeCap,
-  StrokeJoin,
-  TextAlignVertical,
   Variable,
   VariableCollection,
   VariableCollectionMode,
@@ -47,6 +46,7 @@ interface PenStroke {
   fill?: string
   join?: string
   cap?: string
+  dashPattern?: number[]
 }
 
 interface PenEffect {
@@ -62,6 +62,10 @@ interface PenFillObject {
   type: string
   color: string
   enabled?: boolean
+  stops?: Array<{ color: string; position: number }>
+  angle?: number
+  imageHash?: string
+  imageScaleMode?: string
 }
 
 type PenFill = string | PenFillObject | PenFillObject[]
@@ -86,7 +90,9 @@ export interface PenNode {
   stroke?: PenStroke
   effect?: PenEffect | PenEffect[]
   layout?: string
+  wrap?: boolean
   gap?: number | string
+  rowGap?: number | string
   padding?: number | string | (number | string)[]
   justifyContent?: string
   alignItems?: string
@@ -100,6 +106,8 @@ export interface PenNode {
   textAlign?: string
   textAlignVertical?: string
   textGrowth?: string
+  textDecoration?: string
+  textCase?: string
   ref?: string
   descendants?: Record<string, Partial<PenNode>>
   slot?: string[]
@@ -109,6 +117,10 @@ export interface PenNode {
   weight?: number
   model?: string
   theme?: Record<string, string>
+  horizontalConstraint?: string
+  verticalConstraint?: string
+  points?: number
+  innerRadius?: number
 }
 
 export interface VarContext {
@@ -278,22 +290,85 @@ function parseFillColor(fill: string | PenFillObject, ctx: VarContext): Color {
   return isVarRef(raw) ? ctx.resolveColor(raw) : parseColor(raw)
 }
 
+function parseGradientStops(
+  stops: Array<{ color: string; position: number }> | undefined,
+  ctx: VarContext
+): GradientStop[] {
+  if (!stops || stops.length === 0) return []
+  return stops.map((s) => ({
+    color: isVarRef(s.color) ? ctx.resolveColor(s.color) : parseColor(s.color),
+    position: s.position
+  }))
+}
+
+function resolveGradientFill(
+  item: PenFillObject,
+  color: Color,
+  ctx: VarContext,
+  index: number,
+  visible: boolean,
+  node?: SceneNode
+): Fill | null {
+  if (item.type !== 'gradient-linear' && item.type !== 'gradient-radial') return null
+  const stops = parseGradientStops(item.stops, ctx)
+  const type = item.type === 'gradient-linear' ? 'GRADIENT_LINEAR' : 'GRADIENT_RADIAL'
+  const rawRef = item.color
+  const result: Fill = {
+    type,
+    visible,
+    opacity: 1,
+    color: stops[0]?.color ?? color,
+    gradientStops: stops.length > 0 ? stops : [{ color, position: 0 }, { color, position: 1 }]
+  }
+  if (node) bindIfVar(node, `fills[${index}]`, rawRef, ctx)
+  return result
+}
+
+function resolveImageFill(
+  item: PenFillObject,
+  ctx: VarContext,
+  index: number,
+  visible: boolean,
+  node?: SceneNode
+): Fill | null {
+  if (item.type !== 'image' || !item.imageHash) return null
+  const result: Fill = {
+    type: 'IMAGE',
+    visible,
+    opacity: 1,
+    color: { r: 0, g: 0, b: 0, a: 0 },
+    imageHash: item.imageHash,
+    imageScaleMode: (item.imageScaleMode as Fill['imageScaleMode']) ?? 'FILL'
+  }
+  if (node) bindIfVar(node, `fills[${index}]`, item.color, ctx)
+  return result
+}
+
 export function convertFill(fill: PenFill | undefined, ctx: VarContext, node?: SceneNode): Fill[] {
   if (fill === undefined) return []
   const fills = Array.isArray(fill) ? fill : [fill]
   return fills.map((item, index) => {
     const visible = typeof item === 'string' ? true : item.enabled !== false
     const color = parseFillColor(item, ctx)
+    const rawRef = typeof item === 'string' ? item : item.color
+
+    if (typeof item !== 'string') {
+      const gradient = resolveGradientFill(item, color, ctx, index, visible, node)
+      if (gradient) return gradient
+      const image = resolveImageFill(item, ctx, index, visible, node)
+      if (image) return image
+    }
+
     const result: Fill = { type: 'SOLID', visible, opacity: color.a, color }
-    if (node) bindIfVar(node, `fills[${index}]`, typeof item === 'string' ? item : item.color, ctx)
+    if (node) bindIfVar(node, `fills[${index}]`, rawRef, ctx)
     return result
   })
 }
 
 function strokeWeight(stroke: PenStroke): number {
-  return typeof stroke.thickness === 'number'
-    ? stroke.thickness
-    : Math.max(...Object.values(stroke.thickness))
+  if (typeof stroke.thickness === 'number') return stroke.thickness
+  const values = Object.values(stroke.thickness).filter((v): v is number => typeof v === 'number')
+  return values.length > 0 ? Math.max(...values) : 0
 }
 
 export function convertStroke(
@@ -301,11 +376,16 @@ export function convertStroke(
   ctx: VarContext,
   node?: SceneNode
 ): Stroke[] {
-  if (!stroke?.fill) return []
-  const color = isVarRef(stroke.fill) ? ctx.resolveColor(stroke.fill) : parseColor(stroke.fill)
+  if (!stroke) return []
+
   let align: Stroke['align'] = 'CENTER'
   if (stroke.align === 'inside') align = 'INSIDE'
   else if (stroke.align === 'outside') align = 'OUTSIDE'
+
+  const hasFill = !!stroke.fill
+  const color = hasFill
+    ? (isVarRef(stroke.fill) ? ctx.resolveColor(stroke.fill) : parseColor(stroke.fill!))
+    : { r: 0, g: 0, b: 0, a: 1 }
 
   const result: Stroke = {
     visible: true,
@@ -313,10 +393,10 @@ export function convertStroke(
     opacity: color.a,
     weight: strokeWeight(stroke),
     align,
-    dashPattern: []
+    dashPattern: stroke.dashPattern ?? []
   }
   if (node) {
-    bindIfVar(node, 'strokes[0]', stroke.fill, ctx)
+    if (hasFill) bindIfVar(node, 'strokes[0]', stroke.fill, ctx)
     if (typeof stroke.thickness === 'object') {
       node.independentStrokeWeights = true
       node.borderTopWeight = stroke.thickness.top ?? 0
@@ -330,35 +410,38 @@ export function convertStroke(
   return [result]
 }
 
-function mapStrokeJoin(join: string | undefined): StrokeJoin {
-  if (join === 'round') return 'ROUND'
-  if (join === 'bevel') return 'BEVEL'
-  return 'MITER'
-}
-
-function mapStrokeCap(cap: string | undefined): StrokeCap {
-  if (cap === 'round') return 'ROUND'
-  if (cap === 'square') return 'SQUARE'
-  return 'NONE'
-}
-
 export function convertEffects(effect: PenEffect | PenEffect[] | undefined): Effect[] {
   if (!effect) return []
   const effects = Array.isArray(effect) ? effect : [effect]
   return effects.flatMap((item) => {
-    if (item.type !== 'shadow') return []
-    const color = item.color ? parseColor(item.color) : { r: 0, g: 0, b: 0, a: 0.25 }
-    return [
-      {
-        type: item.shadowType === 'inner' ? 'INNER_SHADOW' : 'DROP_SHADOW',
-        visible: true,
-        blendMode: 'NORMAL',
-        color,
-        offset: item.offset ?? { x: 0, y: 0 },
-        radius: item.blur ?? 0,
-        spread: item.spread ?? 0
-      } satisfies Effect
-    ]
+    if (item.type === 'shadow') {
+      const color = item.color ? parseColor(item.color) : { r: 0, g: 0, b: 0, a: 0.25 }
+      return [
+        {
+          type: item.shadowType === 'inner' ? 'INNER_SHADOW' : 'DROP_SHADOW',
+          visible: true,
+          blendMode: 'NORMAL',
+          color,
+          offset: item.offset ?? { x: 0, y: 0 },
+          radius: item.blur ?? 0,
+          spread: item.spread ?? 0
+        } satisfies Effect
+      ]
+    }
+    if (item.type === 'blur') {
+      return [
+        {
+          type: 'LAYER_BLUR' as Effect['type'],
+          visible: true,
+          blendMode: 'NORMAL',
+          color: { r: 0, g: 0, b: 0, a: 0 },
+          offset: { x: 0, y: 0 },
+          radius: item.blur ?? 0,
+          spread: 0
+        } satisfies Effect
+      ]
+    }
+    return []
   })
 }
 
@@ -385,10 +468,33 @@ export function applyPadding(node: SceneNode, padding: PenNode['padding'], ctx?:
   const resolve = (v: number | string): number =>
     typeof v === 'string' ? (isVarRef(v) && ctx ? ctx.resolveNumber(v) : Number(v) || 0) : v
   if (Array.isArray(padding)) {
-    node.paddingTop = resolve(padding[0] ?? 0)
-    node.paddingRight = resolve(padding[1] ?? 0)
-    node.paddingBottom = resolve(padding[2] ?? 0)
-    node.paddingLeft = resolve(padding[3] ?? 0)
+    if (padding.length === 1) {
+      const v = resolve(padding[0] ?? 0)
+      node.paddingTop = v
+      node.paddingRight = v
+      node.paddingBottom = v
+      node.paddingLeft = v
+    } else if (padding.length === 2) {
+      const v = resolve(padding[0] ?? 0)
+      const h = resolve(padding[1] ?? 0)
+      node.paddingTop = v
+      node.paddingRight = h
+      node.paddingBottom = v
+      node.paddingLeft = h
+    } else if (padding.length === 3) {
+      const t = resolve(padding[0] ?? 0)
+      const h = resolve(padding[1] ?? 0)
+      const b = resolve(padding[2] ?? 0)
+      node.paddingTop = t
+      node.paddingRight = h
+      node.paddingBottom = b
+      node.paddingLeft = h
+    } else {
+      node.paddingTop = resolve(padding[0] ?? 0)
+      node.paddingRight = resolve(padding[1] ?? 0)
+      node.paddingBottom = resolve(padding[2] ?? 0)
+      node.paddingLeft = resolve(padding[3] ?? 0)
+    }
     return
   }
   const resolved = resolve(padding)
@@ -396,71 +502,4 @@ export function applyPadding(node: SceneNode, padding: PenNode['padding'], ctx?:
   node.paddingRight = resolved
   node.paddingBottom = resolved
   node.paddingLeft = resolved
-}
-
-export function parseSize(value: number | string | undefined, fallback: number, ctx?: VarContext) {
-  if (value === undefined) return { value: fallback, sizing: 'FIXED' as LayoutSizing }
-  if (typeof value === 'number') return { value, sizing: 'FIXED' as LayoutSizing }
-  if (value === 'fill_container') return { value: fallback, sizing: 'FILL' as LayoutSizing }
-  if (value === 'hug_content') return { value: fallback, sizing: 'HUG' as LayoutSizing }
-  if (isVarRef(value) && ctx)
-    return { value: ctx.resolveNumber(value), sizing: 'FIXED' as LayoutSizing }
-  const parsed = Number(value)
-  return { value: Number.isFinite(parsed) ? parsed : fallback, sizing: 'FIXED' as LayoutSizing }
-}
-
-export function mapLayoutMode(pen: PenNode): LayoutMode {
-  if (pen.layout === 'row' || pen.layout === 'horizontal') return 'HORIZONTAL'
-  if (pen.layout === 'column' || pen.layout === 'vertical') return 'VERTICAL'
-  return 'NONE'
-}
-
-export function mapJustifyContent(value: string | undefined): LayoutAlign {
-  if (value === 'center') return 'CENTER'
-  if (value === 'end') return 'MAX'
-  if (value === 'space-between') return 'SPACE_BETWEEN'
-  return 'MIN'
-}
-
-export function mapAlignItems(value: string | undefined): LayoutCounterAlign {
-  if (value === 'center') return 'CENTER'
-  if (value === 'end') return 'MAX'
-  if (value === 'stretch') return 'STRETCH'
-  return 'MIN'
-}
-
-export function mapTextAlign(value: string | undefined): SceneNode['textAlignHorizontal'] {
-  if (value === 'center') return 'CENTER'
-  if (value === 'right' || value === 'end') return 'RIGHT'
-  if (value === 'justified') return 'JUSTIFIED'
-  return 'LEFT'
-}
-
-export function mapTextAlignVertical(value: string | undefined): TextAlignVertical {
-  if (value === 'center') return 'CENTER'
-  if (value === 'bottom' || value === 'end') return 'BOTTOM'
-  return 'TOP'
-}
-
-export function mapFontWeight(value: string | number | undefined): number {
-  if (typeof value === 'number') return value
-  if (value === 'thin') return 100
-  if (value === 'extralight') return 200
-  if (value === 'light') return 300
-  if (value === 'medium') return 500
-  if (value === 'semibold') return 600
-  if (value === 'bold') return 700
-  if (value === 'extrabold') return 800
-  if (value === 'black') return 900
-  return 400
-}
-
-export function mapNodeType(pen: PenNode): NodeType {
-  if (pen.type === 'frame') return pen.reusable ? 'COMPONENT' : 'FRAME'
-  if (pen.type === 'rectangle') return 'RECTANGLE'
-  if (pen.type === 'ellipse') return 'ELLIPSE'
-  if (pen.type === 'text' || pen.type === 'icon_font') return 'TEXT'
-  if (pen.type === 'path') return 'VECTOR'
-  if (pen.type === 'ref') return 'INSTANCE'
-  return 'FRAME'
 }
