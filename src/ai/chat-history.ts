@@ -42,9 +42,7 @@ function safeParse(raw: string | null): ChatSession[] {
 
 function writeSessions(sessions: ChatSession[]): void {
   try {
-    const sorted = [...sessions]
-      .sort((a, b) => b.updatedAt - a.updatedAt)
-      .slice(0, MAX_SESSIONS)
+    const sorted = [...sessions].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, MAX_SESSIONS)
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sorted))
   } catch (e) {
     console.warn('[chat-history] persist failed:', e instanceof Error ? e.message : e)
@@ -52,9 +50,7 @@ function writeSessions(sessions: ChatSession[]): void {
 }
 
 export function listSessions(): ChatSession[] {
-  return safeParse(localStorage.getItem(STORAGE_KEY)).sort(
-    (a, b) => b.updatedAt - a.updatedAt
-  )
+  return safeParse(localStorage.getItem(STORAGE_KEY)).sort((a, b) => b.updatedAt - a.updatedAt)
 }
 
 export function getSession(id: string): ChatSession | null {
@@ -85,10 +81,7 @@ export function updateSession(id: string, messages: UIMessage[]): void {
     ...current,
     messages,
     updatedAt: Date.now(),
-    title:
-      current.title && current.title !== 'New chat'
-        ? current.title
-        : deriveTitle(messages)
+    title: current.title && current.title !== 'New chat' ? current.title : deriveTitle(messages)
   }
   writeSessions(sessions)
 }

@@ -370,4 +370,3 @@ export const FINTECH_CARD: Recipe = {
   </Frame>
 </Frame>`
 }
-

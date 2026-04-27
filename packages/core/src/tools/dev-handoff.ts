@@ -32,10 +32,15 @@ interface NodeInfo {
   children?: NodeInfo[]
 }
 
-function rgbaToHex(color: { r: number; g: number; b: number; a?: number } | undefined): string | null {
+function rgbaToHex(
+  color: { r: number; g: number; b: number; a?: number } | undefined
+): string | null {
   if (!color) return null
   const toHex = (v: number): string =>
-    Math.round(v * 255).toString(16).padStart(2, '0').toUpperCase()
+    Math.round(v * 255)
+      .toString(16)
+      .padStart(2, '0')
+      .toUpperCase()
   const hex = `#${toHex(color.r)}${toHex(color.g)}${toHex(color.b)}`
   const a = color.a ?? 1
   if (a < 1) return `${hex}${toHex(a)}`
@@ -171,7 +176,9 @@ function buildNodeInfo(proxy: FigmaNodeProxy, devId: string): NodeInfo {
     const fillsArr = j.fills as Array<Record<string, unknown>> | undefined
     const textFill = Array.isArray(fillsArr) ? fillsArr[0] : undefined
     if (textFill) {
-      const hex = rgbaToHex(textFill.color as { r: number; g: number; b: number; a?: number } | undefined)
+      const hex = rgbaToHex(
+        textFill.color as { r: number; g: number; b: number; a?: number } | undefined
+      )
       if (hex) info.color = hex
     }
   }
@@ -354,7 +361,10 @@ function emitFlutter(info: NodeInfo, level: number): string {
   if (info.type === 'TEXT') {
     const textLit = JSON.stringify(info.text ?? '')
     const size = info.font_size ?? 14
-    const weight = typeof info.font_weight === 'number' && info.font_weight >= 600 ? 'FontWeight.bold' : 'FontWeight.normal'
+    const weight =
+      typeof info.font_weight === 'number' && info.font_weight >= 600
+        ? 'FontWeight.bold'
+        : 'FontWeight.normal'
     const color = colorToDart(info.color)
     const family = info.font_family ? `, fontFamily: ${JSON.stringify(info.font_family)}` : ''
     return `${pad}Text(\n${nextPad}${textLit},\n${nextPad}style: TextStyle(fontSize: ${size}, fontWeight: ${weight}, color: ${color}${family}),\n${pad})`
@@ -435,8 +445,7 @@ export const exportFlutter = defineTool({
       root: { id: tree.id, name: tree.name, dev_id: tree.dev_id },
       file_name: `${kebabCase(widgetName)}.dart`,
       dart_code: dart,
-      note:
-        'Structural starting point — review widths, paddings, and Expanded/Flexible usage before shipping. Replace image placeholders with real assets/network URLs.'
+      note: 'Structural starting point — review widths, paddings, and Expanded/Flexible usage before shipping. Replace image placeholders with real assets/network URLs.'
     }
   }
 })
@@ -498,7 +507,9 @@ export const exportFlowDiagram = defineTool({
       }
     }
 
-    const nodesDecl = screens.map((s) => `  ${s.dev_id.replace('.', '_')}["${s.dev_id} · ${s.name}"]`).join('\n')
+    const nodesDecl = screens
+      .map((s) => `  ${s.dev_id.replace('.', '_')}["${s.dev_id} · ${s.name}"]`)
+      .join('\n')
     const edgesDecl = edges.length
       ? edges
           .map(

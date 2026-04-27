@@ -289,7 +289,13 @@ export const AI_PROVIDERS: AIProviderDef[] = [
       { id: 'anthropic/claude-sonnet-4.6', name: 'Claude Sonnet 4.6', tag: 'Best for design' },
       { id: 'anthropic/claude-opus-4.6', name: 'Claude Opus 4.6', tag: 'Smartest' },
       { id: 'anthropic/claude-3.7-sonnet', name: 'Claude 3.7 Sonnet', tag: 'Reliable' },
-      { id: 'anthropic/claude-3.7-sonnet-thinking', name: 'Claude 3.7 + Thinking', tag: 'Reasoning' },
+      {
+        id: 'anthropic/claude-3.7-sonnet-thinking',
+        name: 'Claude 3.7 + Thinking',
+        tag: 'Reasoning'
+      },
+      { id: 'openai/gpt-5.5', name: 'GPT-5.5', tag: 'Design flagship' },
+      { id: 'openai/gpt-5.5-chat', name: 'GPT-5.5 Chat', tag: 'Design critique' },
       { id: 'openai/gpt-5.3-codex', name: 'GPT-5.3 Codex', tag: 'Code + Design' },
       { id: 'openai/gpt-4.5', name: 'GPT-4.5', tag: 'Multimodal' },
       { id: 'openai/gpt-4.1', name: 'GPT-4.1', tag: 'Balanced' },
@@ -304,7 +310,11 @@ export const AI_PROVIDERS: AIProviderDef[] = [
       { id: 'qwen/qwen3-coder:free', name: 'Qwen3 Coder', tag: 'Free' },
       { id: 'z-ai/glm-5.1', name: 'GLM-5.1 (OpenRouter)', tag: 'Best' },
       { id: 'google/gemma-4-26b-a4b-it', name: 'Gemma 4 26B A4B Instruct', tag: 'Open' },
-      { id: 'nvidia/nemotron-3-super-120b-a12b', name: 'Nemotron 3 Super 120B A12B', tag: 'Open flagship' },
+      {
+        id: 'nvidia/nemotron-3-super-120b-a12b',
+        name: 'Nemotron 3 Super 120B A12B',
+        tag: 'Open flagship'
+      },
       { id: 'minimax/minimax-m2.7', name: 'MiniMax M2.7 (OpenRouter)', tag: 'Long context' }
     ]
   },
@@ -331,6 +341,8 @@ export const AI_PROVIDERS: AIProviderDef[] = [
     keyURL: 'https://platform.openai.com/api-keys',
     defaultModel: 'gpt-5.3-codex',
     models: [
+      { id: 'gpt-5.5', name: 'GPT-5.5', tag: 'Design flagship' },
+      { id: 'gpt-5.5-chat', name: 'GPT-5.5 Chat', tag: 'Design critique' },
       { id: 'gpt-5.3-codex', name: 'GPT-5.3 Codex', tag: 'Code + Design' },
       { id: 'gpt-4.5', name: 'GPT-4.5', tag: 'Multimodal' },
       { id: 'gpt-4.1', name: 'GPT-4.1', tag: 'Balanced' },

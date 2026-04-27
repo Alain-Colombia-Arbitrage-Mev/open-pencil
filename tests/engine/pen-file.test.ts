@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test'
 import { join } from 'node:path'
 
-import { parsePenFile } from '@open-pencil/core'
+import { exportFigFile, parseFigFile, parsePenFile, SceneGraph } from '@open-pencil/core'
 
 const FIXTURE_DIR = join(import.meta.dir, '..', 'fixtures')
 
@@ -33,5 +33,16 @@ describe('parsePenFile', () => {
 
     expect(vectors.length).toBeGreaterThan(0)
     expect(vectors.some((node) => (node.vectorNetwork?.vertices.length ?? 0) > 0)).toBe(true)
+  })
+
+  test('exports imported .pen documents as parseable Figma-compatible .fig data', async () => {
+    const graph = parsePenFile(await loadFixture('pencil_button.pen'))
+    const exported = await exportFigFile(graph)
+    const reparsed = await parseFigFile(exported.buffer as ArrayBuffer)
+
+    expect(exported[0]).toBe(0x50)
+    expect(exported[1]).toBe(0x4b)
+    expect(reparsed).toBeInstanceOf(SceneGraph)
+    expect(reparsed.getPages().length).toBeGreaterThan(0)
   })
 })

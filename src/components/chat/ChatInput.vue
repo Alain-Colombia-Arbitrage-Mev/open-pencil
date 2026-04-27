@@ -172,7 +172,12 @@ function handleSubmit(e: Event) {
       />
 
       <!-- Input form -->
-      <form class="flex gap-1.5" @submit="handleSubmit" @drop.prevent="handleDrop" @dragover.prevent>
+      <form
+        class="flex gap-1.5"
+        @submit="handleSubmit"
+        @drop.prevent="handleDrop"
+        @dragover.prevent
+      >
         <Tip :label="'Attach reference image'">
           <button
             type="button"
@@ -194,7 +199,9 @@ function handleSubmit(e: Event) {
           v-model="input"
           type="text"
           data-test-id="chat-input"
-          :placeholder="isStreaming ? dialogs.queueMessage ?? 'Queue a message…' : dialogs.describeChange"
+          :placeholder="
+            isStreaming ? (dialogs.queueMessage ?? 'Queue a message…') : dialogs.describeChange
+          "
           :class="useInputUI({ ui: { base: 'min-w-0 flex-1 placeholder:text-muted' } }).base"
           @paste.stop="handlePaste"
           @copy.stop
@@ -217,7 +224,7 @@ function handleSubmit(e: Event) {
             <icon-lucide-square class="size-3" />
           </button>
         </Tip>
-        <Tip :label="isStreaming ? dialogs.queueMessage ?? 'Queue message' : dialogs.sendMessage">
+        <Tip :label="isStreaming ? (dialogs.queueMessage ?? 'Queue message') : dialogs.sendMessage">
           <button
             type="submit"
             data-test-id="chat-send-button"

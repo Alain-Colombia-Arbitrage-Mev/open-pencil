@@ -99,8 +99,7 @@ async function handleSubmit(text: string, files?: File[]) {
     toast.error(e instanceof Error ? e.message : String(e))
     return
   }
-  const payload: { text?: string; files?: FileList } = {}
-  if (text) payload.text = text
+  const payload: { text: string; files?: FileList } = { text }
   if (files && files.length > 0) {
     const dt = new DataTransfer()
     for (const f of files) dt.items.add(f)
@@ -203,9 +202,7 @@ function formatRelativeTime(ts: number): string {
 
     <template v-else>
       <!-- Chat header with new chat + history -->
-      <div
-        class="relative flex shrink-0 items-center gap-1 border-b border-border px-3 py-1.5"
-      >
+      <div class="relative flex shrink-0 items-center gap-1 border-b border-border px-3 py-1.5">
         <button
           type="button"
           data-test-id="chat-new-button"
@@ -233,7 +230,9 @@ function formatRelativeTime(ts: number): string {
           data-test-id="chat-history-panel"
           class="absolute inset-x-0 top-full z-20 mx-2 mt-1 max-h-96 overflow-hidden rounded-lg border border-border bg-surface shadow-lg"
         >
-          <div class="flex items-center justify-between px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-muted">
+          <div
+            class="flex items-center justify-between px-3 py-2 text-[10px] font-medium uppercase tracking-wide text-muted"
+          >
             <span>Conversations</span>
             <button
               type="button"
@@ -264,7 +263,8 @@ function formatRelativeTime(ts: number): string {
                   <div class="min-w-0 flex-1">
                     <div class="truncate font-medium">{{ session.title }}</div>
                     <div class="text-[10px] text-muted">
-                      {{ session.messages.length }} messages · {{ formatRelativeTime(session.updatedAt) }}
+                      {{ session.messages.length }} messages ·
+                      {{ formatRelativeTime(session.updatedAt) }}
                     </div>
                   </div>
                   <button
@@ -278,7 +278,10 @@ function formatRelativeTime(ts: number): string {
                 </li>
               </ul>
             </ScrollAreaViewport>
-            <ScrollAreaScrollbar orientation="vertical" class="flex w-1.5 touch-none p-px select-none">
+            <ScrollAreaScrollbar
+              orientation="vertical"
+              class="flex w-1.5 touch-none p-px select-none"
+            >
               <ScrollAreaThumb class="relative flex-1 rounded-full bg-muted/30" />
             </ScrollAreaScrollbar>
           </ScrollAreaRoot>

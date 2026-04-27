@@ -147,7 +147,7 @@ function rasterFormat(format: RasterExportFormat): IOFormatAdapter {
 
 export const figFormat: IOFormatAdapter = {
   id: 'fig',
-  label: 'OpenPencil Document',
+  label: 'Figma-compatible Document',
   role: 'native-document',
   category: 'document',
   extensions: ['fig'],

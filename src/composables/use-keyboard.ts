@@ -28,7 +28,7 @@ function isInputElement(el: EventTarget | null | undefined): boolean {
 }
 
 function hasDomTextSelection() {
-  const sel = window.getSelection?.()
+  const sel = window.getSelection()
   return !!sel && !sel.isCollapsed && sel.toString().length > 0
 }
 

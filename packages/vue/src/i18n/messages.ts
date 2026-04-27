@@ -213,6 +213,7 @@ export const dialogMessages = i18n('dialogs', {
   oneKeyManyModels: 'One key for 100+ models from all providers.',
   describeChange: 'Describe a change…',
   describeCreateOrChange: 'Describe what you want to create or change.',
+  queueMessage: 'Queue message',
   stopGenerating: 'Stop generating',
   sendMessage: 'Send message',
   baseURLPlaceholder: 'Base URL (e.g. http://localhost:11434/v1)',

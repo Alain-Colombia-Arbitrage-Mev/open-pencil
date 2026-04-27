@@ -7,7 +7,6 @@ import { useLocalStorage } from '@vueuse/core'
 import { DirectChatTransport, stepCountIs, ToolLoopAgent } from 'ai'
 import { computed, ref, watch } from 'vue'
 
-import SYSTEM_PROMPT from '@/ai/system-prompt.md?raw'
 import {
   createSession,
   deleteSession as deleteSessionEntry,
@@ -18,6 +17,7 @@ import {
   updateSession,
   type ChatSession
 } from '@/ai/chat-history'
+import SYSTEM_PROMPT from '@/ai/system-prompt.md?raw'
 import { MAX_AGENT_STEPS, createAITools, recordStepUsage, resetRunSteps } from '@/ai/tools'
 import { getActiveEditorStore } from '@/stores/editor'
 import {

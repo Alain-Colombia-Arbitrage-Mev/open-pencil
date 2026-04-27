@@ -208,9 +208,7 @@ function walk(
   }
 
   if (type === 'frame' || type === 'section') {
-    const elementChildren = node.children.filter(
-      (c): c is TreeNode => typeof c !== 'string'
-    )
+    const elementChildren = node.children.filter((c): c is TreeNode => typeof c !== 'string')
     if (elementChildren.length >= 2 && !node.props.flex && !node.props.grid) {
       warnings.push({
         path: here,
@@ -277,7 +275,14 @@ export function validateJSX(jsx: string): ValidationResult {
       message: 'JSX must return exactly one root element',
       fix: 'Wrap everything in a single <Frame> or remove siblings at the root level'
     })
-    return { valid: false, errors, warnings, info: infoArr, summary: 'No root element', nodeCount: 0 }
+    return {
+      valid: false,
+      errors,
+      warnings,
+      info: infoArr,
+      summary: 'No root element',
+      nodeCount: 0
+    }
   }
 
   walk(tree, 'root', errors, warnings, infoArr, counter)

@@ -7,6 +7,12 @@ import {
   diffShow,
   evalCode
 } from './analyze'
+import {
+  getDesignContract,
+  getDesignSchema,
+  getDesignTokens,
+  validateJsxTool
+} from './anti-hallucinate'
 import { calc } from './calc'
 import { designToTokens, designToComponentMap } from './codegen'
 import {
@@ -21,12 +27,6 @@ import {
   insertIcon,
   searchIconsTool
 } from './create'
-import {
-  getDesignContract,
-  getDesignSchema,
-  getDesignTokens,
-  validateJsxTool
-} from './anti-hallucinate'
 import { describe } from './describe'
 import { listRecipes, getRecipe } from './design-recipes'
 import { describeForDev, exportFlutter, exportFlowDiagram } from './dev-handoff'

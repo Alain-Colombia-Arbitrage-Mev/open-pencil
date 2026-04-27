@@ -19,7 +19,7 @@ function defaultOutput(file: string, format: WritableFormat): string {
 }
 
 export default defineCommand({
-  meta: { description: 'Convert a document to another writable format' },
+  meta: { description: 'Convert .pen/.fig documents to a Figma-compatible .fig file' },
   args: {
     file: {
       type: 'positional',
@@ -35,7 +35,7 @@ export default defineCommand({
     format: {
       type: 'string',
       alias: 'f',
-      description: 'Output format: fig (default: fig)',
+      description: 'Output format: fig for Figma-compatible import (default: fig)',
       default: 'fig'
     }
   },

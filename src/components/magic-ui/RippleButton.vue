@@ -15,9 +15,9 @@ function createRipple(event: MouseEvent) {
   const x = event.clientX - rect.left
   const y = event.clientY - rect.top
   const id = Date.now()
-  
+
   ripples.value.push({ id, x, y })
-  
+
   setTimeout(() => {
     ripples.value = ripples.value.filter((r) => r.id !== id)
   }, 600)
@@ -25,11 +25,7 @@ function createRipple(event: MouseEvent) {
 </script>
 
 <template>
-  <button
-    class="ripple-button relative overflow-hidden"
-    :class="classProp"
-    @click="createRipple"
-  >
+  <button class="ripple-button relative overflow-hidden" :class="classProp" @click="createRipple">
     <slot />
     <span
       v-for="ripple in ripples"

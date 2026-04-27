@@ -3,7 +3,12 @@ import { computed } from 'vue'
 
 defineOptions({ inheritAttrs: false })
 
-const { class: classProp, size = 300, duration = 2000, cornerRadius = 8 } = defineProps<{
+const {
+  class: classProp,
+  size = 300,
+  duration = 2000,
+  cornerRadius = 8
+} = defineProps<{
   class?: string
   size?: number
   duration?: number
@@ -35,20 +40,13 @@ const style = computed(() => ({
   inset: 0;
   border-radius: var(--beam-corner, 8px);
   padding: 2px;
-  background: linear-gradient(
-    0deg,
-    #3B82F6,
-    #8B5CF6,
-    #EC4899,
-    #F59E0B,
-    #3B82F6
-  );
+  background: linear-gradient(0deg, #3b82f6, #8b5cf6, #ec4899, #f59e0b, #3b82f6);
   background-size: 300% 300%;
-  -webkit-mask: 
-    linear-gradient(#fff 0 0) content-box, 
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
-  mask: 
-    linear-gradient(#fff 0 0) content-box, 
+  mask:
+    linear-gradient(#fff 0 0) content-box,
     linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;

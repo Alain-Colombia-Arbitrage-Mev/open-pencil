@@ -1,5 +1,4 @@
 import { getSchemaDocument, validateJSX } from '../design-jsx'
-
 import { defineTool } from './schema'
 
 export const validateJsxTool = defineTool({
@@ -54,7 +53,8 @@ export const getDesignContract = defineTool({
     read_before_write: {
       rule: 'Before calling any update_*/set_*/delete_node tool on an existing node id, you must have inspected that id via describe, get_node, or find_nodes in the current session.',
       why: 'Prevents blind overwrites of user work.',
-      exception: 'Newly rendered node ids (from render output) may be edited without prior describe.'
+      exception:
+        'Newly rendered node ids (from render output) may be edited without prior describe.'
     },
     validate_before_render: {
       rule: 'Call validate_jsx before render whenever JSX comes from a modified recipe, external reference, or your own synthesis if confidence is low.',
@@ -122,7 +122,11 @@ export const getDesignTokens = defineTool({
   description:
     'Returns actual tokens in use across the current document: unique colors (with usage count), fonts, font sizes, spacing values, border radii. Use this BEFORE adding new values to keep designs consistent with existing brand.',
   params: {
-    page_id: { type: 'string', description: 'Page id to scan. Defaults to current page.', required: false }
+    page_id: {
+      type: 'string',
+      description: 'Page id to scan. Defaults to current page.',
+      required: false
+    }
   },
   execute: (figma, args) => {
     const colors = new Map<string, number>()
@@ -134,7 +138,14 @@ export const getDesignTokens = defineTool({
     const pageId = args.page_id ?? figma.currentPage.id
     const page = figma.getNodeById(pageId)
     if (!page) {
-      return { error: `Page "${pageId}" not found`, colors: [], fonts: [], fontSizes: [], spacings: [], radii: [] }
+      return {
+        error: `Page "${pageId}" not found`,
+        colors: [],
+        fonts: [],
+        fontSizes: [],
+        spacings: [],
+        radii: []
+      }
     }
 
     // eslint-disable-next-line complexity -- token scanner walks many json fields
@@ -169,9 +180,12 @@ export const getDesignTokens = defineTool({
       if (fontName?.family) addCount(fonts, fontName.family)
 
       if (typeof json.itemSpacing === 'number') addCount(spacings, json.itemSpacing)
-      if (typeof json.paddingLeft === 'number' && json.paddingLeft > 0) addCount(spacings, json.paddingLeft)
-      if (typeof json.paddingTop === 'number' && json.paddingTop > 0) addCount(spacings, json.paddingTop)
-      if (typeof json.cornerRadius === 'number' && json.cornerRadius > 0) addCount(radii, json.cornerRadius)
+      if (typeof json.paddingLeft === 'number' && json.paddingLeft > 0)
+        addCount(spacings, json.paddingLeft)
+      if (typeof json.paddingTop === 'number' && json.paddingTop > 0)
+        addCount(spacings, json.paddingTop)
+      if (typeof json.cornerRadius === 'number' && json.cornerRadius > 0)
+        addCount(radii, json.cornerRadius)
 
       const childIds = (json.children as Array<{ id: string }> | undefined) ?? []
       for (const child of childIds) {
@@ -181,10 +195,11 @@ export const getDesignTokens = defineTool({
 
     visit(page)
 
-    const toArray = <K extends string | number>(m: Map<K, number>, key: 'hex' | 'family' | 'value'): unknown[] =>
-      [...m.entries()]
-        .sort((a, b) => b[1] - a[1])
-        .map(([k, count]) => ({ [key]: k, count }))
+    const toArray = <K extends string | number>(
+      m: Map<K, number>,
+      key: 'hex' | 'family' | 'value'
+    ): unknown[] =>
+      [...m.entries()].sort((a, b) => b[1] - a[1]).map(([k, count]) => ({ [key]: k, count }))
 
     return {
       page: pageId,

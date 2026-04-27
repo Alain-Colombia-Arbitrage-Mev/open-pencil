@@ -2,8 +2,12 @@
 
 ## Unreleased
 
+## 0.11.7 — 2026-04-27
+
 ### Features
 
+- Add explicit `.pen` to Figma-compatible `.fig` conversion coverage and label `.fig` exports as Figma-compatible documents.
+- Add GPT-5.5 model presets for OpenRouter and OpenAI, and strengthen the AI redesign workflow for improving imported Pencil/Figma documents.
 - Add stdio transport for MCP server — `openpencil-mcp` now works as a proper stdio MCP server for Claude Code, Cursor, etc. HTTP server available as `openpencil-mcp-http`.
 
 ### Fixes

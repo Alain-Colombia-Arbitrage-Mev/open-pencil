@@ -1,7 +1,11 @@
 <script setup lang="ts">
 defineOptions({ inheritAttrs: false })
 
-const { class: classProp, columns, gap } = defineProps<{
+const {
+  class: classProp,
+  columns,
+  gap
+} = defineProps<{
   class?: string
   columns?: number
   gap?: number
