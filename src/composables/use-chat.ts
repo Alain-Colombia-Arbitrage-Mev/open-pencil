@@ -44,46 +44,44 @@ function keyStorageKey(id: string) {
 
 /** All known-invalid model IDs from previous releases that must be migrated. */
 const INVALID_MODEL_IDS = new Set([
+  // OpenRouter — outdated IDs or models removed in v0.11.x pruning
   'anthropic/claude-opus-4.7',
   'anthropic/claude-sonnet-4.6',
   'anthropic/claude-opus-4.6',
   'anthropic/claude-3.7-sonnet-thinking',
   'openai/gpt-5.5-chat',
-  'openai/gpt-5.3-codex',
-  'openai/gpt-4.5',
-  'google/gemini-3-flash-preview',
   'google/gemini-2.5-pro-preview',
   'google/gemini-2.5-flash-preview',
   'moonshotai/kimi-k2.5',
   'deepseek/deepseek-v3.2',
   'qwen/qwen3.5-flash-02-23',
   'qwen/qwen3-coder:free',
-  'z-ai/glm-5.1',
   'google/gemma-4-26b-a4b-it',
   'nvidia/nemotron-3-super-120b-a12b',
   'minimax/minimax-m2.7',
+  // Anthropic direct
   'claude-opus-4-7',
-  'claude-sonnet-4-6-20260301',
-  'claude-opus-4-6-20260301',
-  'claude-sonnet-4-5-20250501',
-  'claude-haiku-4-5-20250501',
-  'claude-3-7-sonnet-20250114',
   'claude-3-7-sonnet-20250114-thinking',
+  // OpenAI direct
   'gpt-5.5',
   'gpt-5.5-chat',
   'gpt-5.3-codex',
   'gpt-4.5',
-  'gemini-3.1-pro-preview',
-  'gemini-3-flash-preview',
-  'glm-5.1',
+  // Google direct — no longer listed
+  'gemini-2.0-pro-preview-05-20',
+  'gemini-2.0-flash-exp',
+  // Z.ai direct — pruned older GLM variants
   'glm-5',
   'glm-5-code',
   'glm-4.7',
   'glm-4.7-flashx',
   'glm-4.7-flash',
-  'MiniMax-M2.7',
+  // MiniMax direct
   'MiniMax-M2.7-highspeed',
-  'MiniMax-M2.5',
+  'MiniMax-M2.5-highspeed',
+  'MiniMax-M2.1',
+  'MiniMax-M2.1-highspeed',
+  'MiniMax-M2',
 ])
 
 function migrateLegacyStorage() {
@@ -293,12 +291,18 @@ function createTransport(store: ReturnType<typeof getActiveEditorStore>) {
   acpTransportInstance = null
 
   const tools = createAITools(store)
+  if (import.meta.env.DEV) {
+    // eslint-disable-next-line no-console
+    console.log('[AI] Registered tools:', Object.keys(tools).sort().join(', '))
+  }
   const cacheProviderOptions = supportsAnthropicCaching() ? ANTHROPIC_CACHE_CONTROL : undefined
 
   const preset = STYLE_PRESETS.find((p) => p.id === stylePresetID.value)
-  const fullPrompt = preset?.promptSuffix
+  const basePrompt = preset?.promptSuffix
     ? `${SYSTEM_PROMPT}\n\n---\n\n${preset.promptSuffix}`
     : SYSTEM_PROMPT
+  // Append a hard enforcement so models never reply with text-only when design work is requested.
+  const fullPrompt = `${basePrompt}\n\nCRITICAL INSTRUCTION: When the user asks you to design, create, build, or modify anything, you MUST call the available tools. Never respond with text only — always execute the design using render, set_fill, set_layout, update_node, list_recipes, get_recipe, and other tools.`.trim()
 
   const agent = new ToolLoopAgent({
     model: createModel(),

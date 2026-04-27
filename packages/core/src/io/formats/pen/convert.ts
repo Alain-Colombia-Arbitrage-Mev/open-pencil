@@ -55,16 +55,24 @@ interface PenEffect {
   color?: string
   offset?: Vector
   blur?: number
+  radius?: number
   spread?: number
 }
 
 interface PenFillObject {
   type: string
-  color: string
+  color?: string
   enabled?: boolean
   stops?: Array<{ color: string; position: number }>
+  colors?: Array<{ color: string; position: number }>
   angle?: number
+  rotation?: number
+  gradientType?: 'linear' | 'radial'
+  size?: { width?: number; height?: number }
+  center?: { x?: number; y?: number }
   imageHash?: string
+  url?: string
+  mode?: string
   imageScaleMode?: string
 }
 
@@ -121,6 +129,11 @@ export interface PenNode {
   verticalConstraint?: string
   points?: number
   innerRadius?: number
+  layoutPosition?: string
+  fontStyle?: string
+  sweepAngle?: number
+  metadata?: Record<string, unknown>
+  context?: string
 }
 
 export interface VarContext {
@@ -286,7 +299,7 @@ export function buildVarContext(
 }
 
 function parseFillColor(fill: string | PenFillObject, ctx: VarContext): Color {
-  const raw = typeof fill === 'string' ? fill : fill.color
+  const raw = typeof fill === 'string' ? fill : (fill.color ?? '#00000000')
   return isVarRef(raw) ? ctx.resolveColor(raw) : parseColor(raw)
 }
 
@@ -301,6 +314,16 @@ function parseGradientStops(
   }))
 }
 
+function isGradientType(type: string): boolean {
+  return type === 'gradient-linear' || type === 'gradient-radial' || type === 'gradient'
+}
+
+function resolveGradientKind(item: PenFillObject): 'GRADIENT_LINEAR' | 'GRADIENT_RADIAL' {
+  if (item.type === 'gradient-radial') return 'GRADIENT_RADIAL'
+  if (item.type === 'gradient-linear') return 'GRADIENT_LINEAR'
+  return item.gradientType === 'radial' ? 'GRADIENT_RADIAL' : 'GRADIENT_LINEAR'
+}
+
 function resolveGradientFill(
   item: PenFillObject,
   color: Color,
@@ -309,9 +332,11 @@ function resolveGradientFill(
   visible: boolean,
   node?: SceneNode
 ): Fill | null {
-  if (item.type !== 'gradient-linear' && item.type !== 'gradient-radial') return null
-  const stops = parseGradientStops(item.stops, ctx)
-  const type = item.type === 'gradient-linear' ? 'GRADIENT_LINEAR' : 'GRADIENT_RADIAL'
+  if (!isGradientType(item.type)) return null
+  // Support both `stops` (older) and `colors` (newer) formats
+  const stopsInput = item.stops ?? item.colors
+  const stops = parseGradientStops(stopsInput, ctx)
+  const type = resolveGradientKind(item)
   const rawRef = item.color
   const result: Fill = {
     type,
@@ -320,7 +345,7 @@ function resolveGradientFill(
     color: stops[0]?.color ?? color,
     gradientStops: stops.length > 0 ? stops : [{ color, position: 0 }, { color, position: 1 }]
   }
-  if (node) bindIfVar(node, `fills[${index}]`, rawRef, ctx)
+  if (node && rawRef) bindIfVar(node, `fills[${index}]`, rawRef, ctx)
   return result
 }
 
@@ -331,16 +356,19 @@ function resolveImageFill(
   visible: boolean,
   node?: SceneNode
 ): Fill | null {
-  if (item.type !== 'image' || !item.imageHash) return null
+  if (item.type !== 'image') return null
+  const imageHash = item.imageHash ?? item.url
+  if (!imageHash) return null
+  const scaleMode = (item.imageScaleMode ?? item.mode ?? 'fill').toUpperCase()
   const result: Fill = {
     type: 'IMAGE',
     visible,
     opacity: 1,
     color: { r: 0, g: 0, b: 0, a: 0 },
-    imageHash: item.imageHash,
-    imageScaleMode: (item.imageScaleMode as Fill['imageScaleMode']) ?? 'FILL'
+    imageHash,
+    imageScaleMode: scaleMode as Fill['imageScaleMode']
   }
-  if (node) bindIfVar(node, `fills[${index}]`, item.color, ctx)
+  if (node && item.color) bindIfVar(node, `fills[${index}]`, item.color, ctx)
   return result
 }
 
@@ -350,7 +378,7 @@ export function convertFill(fill: PenFill | undefined, ctx: VarContext, node?: S
   return fills.map((item, index) => {
     const visible = typeof item === 'string' ? true : item.enabled !== false
     const color = parseFillColor(item, ctx)
-    const rawRef = typeof item === 'string' ? item : item.color
+    const rawRef = typeof item === 'string' ? item : (item.color ?? '')
 
     if (typeof item !== 'string') {
       const gradient = resolveGradientFill(item, color, ctx, index, visible, node)
@@ -360,7 +388,7 @@ export function convertFill(fill: PenFill | undefined, ctx: VarContext, node?: S
     }
 
     const result: Fill = { type: 'SOLID', visible, opacity: color.a, color }
-    if (node) bindIfVar(node, `fills[${index}]`, rawRef, ctx)
+    if (node && rawRef) bindIfVar(node, `fills[${index}]`, rawRef, ctx)
     return result
   })
 }
@@ -383,9 +411,12 @@ export function convertStroke(
   else if (stroke.align === 'outside') align = 'OUTSIDE'
 
   const hasFill = !!stroke.fill
-  const color = hasFill
-    ? (isVarRef(stroke.fill) ? ctx.resolveColor(stroke.fill) : parseColor(stroke.fill!))
-    : { r: 0, g: 0, b: 0, a: 1 }
+  let color: Color
+  if (hasFill && stroke.fill) {
+    color = isVarRef(stroke.fill) ? ctx.resolveColor(stroke.fill) : parseColor(stroke.fill)
+  } else {
+    color = { r: 0, g: 0, b: 0, a: 1 }
+  }
 
   const result: Stroke = {
     visible: true,
@@ -428,7 +459,7 @@ export function convertEffects(effect: PenEffect | PenEffect[] | undefined): Eff
         } satisfies Effect
       ]
     }
-    if (item.type === 'blur') {
+    if (item.type === 'blur' || item.type === 'layer_blur') {
       return [
         {
           type: 'LAYER_BLUR' as Effect['type'],
@@ -436,7 +467,20 @@ export function convertEffects(effect: PenEffect | PenEffect[] | undefined): Eff
           blendMode: 'NORMAL',
           color: { r: 0, g: 0, b: 0, a: 0 },
           offset: { x: 0, y: 0 },
-          radius: item.blur ?? 0,
+          radius: (item as PenEffect & { radius?: number }).radius ?? item.blur ?? 0,
+          spread: 0
+        } satisfies Effect
+      ]
+    }
+    if (item.type === 'background_blur' || item.type === 'backdrop_blur') {
+      return [
+        {
+          type: 'BACKGROUND_BLUR' as Effect['type'],
+          visible: true,
+          blendMode: 'NORMAL',
+          color: { r: 0, g: 0, b: 0, a: 0 },
+          offset: { x: 0, y: 0 },
+          radius: (item as PenEffect & { radius?: number }).radius ?? item.blur ?? 0,
           spread: 0
         } satisfies Effect
       ]

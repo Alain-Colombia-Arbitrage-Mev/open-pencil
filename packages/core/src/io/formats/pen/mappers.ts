@@ -18,13 +18,24 @@ import type { VarContext, PenNode } from './convert'
 export function mapLayoutMode(pen: PenNode): LayoutMode {
   if (pen.layout === 'row' || pen.layout === 'horizontal') return 'HORIZONTAL'
   if (pen.layout === 'column' || pen.layout === 'vertical') return 'VERTICAL'
+  if (pen.layout === 'none') return 'NONE'
+  // Implicit auto-layout: if no explicit layout but has gap/justifyContent/alignItems,
+  // default to horizontal (most common in .pen files)
+  if (
+    pen.layout === undefined &&
+    (pen.gap !== undefined || pen.justifyContent !== undefined || pen.alignItems !== undefined)
+  ) {
+    return 'HORIZONTAL'
+  }
   return 'NONE'
 }
 
 export function mapJustifyContent(value: string | undefined): LayoutAlign {
   if (value === 'center') return 'CENTER'
   if (value === 'end') return 'MAX'
-  if (value === 'space-between') return 'SPACE_BETWEEN'
+  if (value === 'space-between' || value === 'space_between') return 'SPACE_BETWEEN'
+  if (value === 'space-around' || value === 'space_around') return 'SPACE_BETWEEN'
+  if (value === 'space-evenly' || value === 'space_evenly') return 'SPACE_BETWEEN'
   return 'MIN'
 }
 

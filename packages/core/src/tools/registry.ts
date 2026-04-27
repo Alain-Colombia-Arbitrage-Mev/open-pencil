@@ -135,6 +135,8 @@ export const CORE_TOOLS: ToolDef[] = [
   getJsx,
   // Create
   render,
+  createComponent,
+  createInstance,
   // Modify
   updateNode,
   setLayout,

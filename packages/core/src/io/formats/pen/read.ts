@@ -130,6 +130,7 @@ function applyTextProps(node: SceneNode, pen: PenNode, ctx: VarContext): void {
   node.fontWeight = mapFontWeight(
     pen.fontWeight ?? (pen.type === 'icon_font' ? pen.weight : undefined)
   )
+  node.italic = pen.fontStyle === 'italic'
   node.textAlignHorizontal = mapTextAlign(pen.textAlign)
   node.textAlignVertical = mapTextAlignVertical(pen.textAlignVertical)
   node.textDecoration = mapTextDecoration(pen.textDecoration)
@@ -247,6 +248,19 @@ function applyStarProps(node: SceneNode, pen: PenNode): void {
   if (pen.type === 'polygon') {
     node.pointCount = pen.points ?? 6
   }
+  if (pen.type === 'ellipse' && pen.sweepAngle !== undefined) {
+    // sweepAngle in .pen is the arc sweep in degrees; convert to arcData
+    const sweep = Math.abs(pen.sweepAngle)
+    // Only set arcData if it's a partial arc (not a full circle)
+    if (sweep > 0 && sweep < 360) {
+      const radians = (sweep * Math.PI) / 180
+      node.arcData = {
+        startingAngle: 0,
+        endingAngle: radians,
+        innerRadius: 0
+      }
+    }
+  }
 }
 
 // eslint-disable-next-line complexity -- .pen node mapping touches many format-specific fields
@@ -305,14 +319,19 @@ function createSceneNode(
   }
 
   if (parentLayout !== 'NONE') {
-    const parentVertical = parentLayout === 'VERTICAL'
-    if (w.sizing === 'FILL') {
-      if (parentVertical) node.layoutAlignSelf = 'STRETCH'
-      else node.layoutGrow = 1
-    }
-    if (h.sizing === 'FILL') {
-      if (parentVertical) node.layoutGrow = 1
-      else node.layoutAlignSelf = 'STRETCH'
+    // Respect absolute positioning: child uses x/y instead of flow layout
+    if (pen.layoutPosition === 'absolute') {
+      node.layoutPositioning = 'ABSOLUTE'
+    } else {
+      const parentVertical = parentLayout === 'VERTICAL'
+      if (w.sizing === 'FILL') {
+        if (parentVertical) node.layoutAlignSelf = 'STRETCH'
+        else node.layoutGrow = 1
+      }
+      if (h.sizing === 'FILL') {
+        if (parentVertical) node.layoutGrow = 1
+        else node.layoutAlignSelf = 'STRETCH'
+      }
     }
   }
 

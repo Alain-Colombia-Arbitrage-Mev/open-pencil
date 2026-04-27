@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## 0.11.9 — 2026-04-27
+
+### Fixes
+
+- Fix AI design tools not being invoked by models — append a hard tool-use enforcement to the system prompt so models always call `render`, `set_fill`, `set_layout`, etc. instead of replying with text only
+- Fix `INVALID_MODEL_IDS` migration set containing still-valid model IDs (e.g. `glm-5.1`, `MiniMax-M2.7`, `gemini-3.1-pro-preview`), which caused the selected model to reset on every reload
+- Fix `create_component` and `create_instance` tools missing from `CORE_TOOLS` — they were only in `EXTENDED_TOOLS`, so the AI agent never saw them
+- Fix nested ternary lint error in `packages/core/src/io/formats/pen/convert.ts`
+
 ## 0.11.8 — 2026-04-27
 
 ### Fixes
