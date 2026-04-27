@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## 0.11.8 — 2026-04-27
+
+### Fixes
+
+- Fix AI chat not working — replace all invalid/hallucinated model IDs with real API IDs across all providers (OpenRouter, Anthropic, OpenAI, Google, Z.ai, MiniMax)
+- Add automatic migration: stale invalid model IDs stored in localStorage are reset to the current default on startup
+
+### Features
+
+- Add `openai/gpt-5.5`, `qwen/qwen3.6-plus`, and `google/gemini-3.1-pro-preview` to OpenRouter model list
+
 ## 0.11.7 — 2026-04-27
 
 ### Features

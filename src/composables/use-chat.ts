@@ -42,6 +42,50 @@ function keyStorageKey(id: string) {
   return `${STORAGE_PREFIX}ai-key:${id}`
 }
 
+/** All known-invalid model IDs from previous releases that must be migrated. */
+const INVALID_MODEL_IDS = new Set([
+  'anthropic/claude-opus-4.7',
+  'anthropic/claude-sonnet-4.6',
+  'anthropic/claude-opus-4.6',
+  'anthropic/claude-3.7-sonnet-thinking',
+  'openai/gpt-5.5-chat',
+  'openai/gpt-5.3-codex',
+  'openai/gpt-4.5',
+  'google/gemini-3-flash-preview',
+  'google/gemini-2.5-pro-preview',
+  'google/gemini-2.5-flash-preview',
+  'moonshotai/kimi-k2.5',
+  'deepseek/deepseek-v3.2',
+  'qwen/qwen3.5-flash-02-23',
+  'qwen/qwen3-coder:free',
+  'z-ai/glm-5.1',
+  'google/gemma-4-26b-a4b-it',
+  'nvidia/nemotron-3-super-120b-a12b',
+  'minimax/minimax-m2.7',
+  'claude-opus-4-7',
+  'claude-sonnet-4-6-20260301',
+  'claude-opus-4-6-20260301',
+  'claude-sonnet-4-5-20250501',
+  'claude-haiku-4-5-20250501',
+  'claude-3-7-sonnet-20250114',
+  'claude-3-7-sonnet-20250114-thinking',
+  'gpt-5.5',
+  'gpt-5.5-chat',
+  'gpt-5.3-codex',
+  'gpt-4.5',
+  'gemini-3.1-pro-preview',
+  'gemini-3-flash-preview',
+  'glm-5.1',
+  'glm-5',
+  'glm-5-code',
+  'glm-4.7',
+  'glm-4.7-flashx',
+  'glm-4.7-flash',
+  'MiniMax-M2.7',
+  'MiniMax-M2.7-highspeed',
+  'MiniMax-M2.5',
+])
+
 function migrateLegacyStorage() {
   const legacyKey = localStorage.getItem(LEGACY_KEY_STORAGE)
   if (legacyKey) {
@@ -50,6 +94,12 @@ function migrateLegacyStorage() {
     if (!localStorage.getItem(`${STORAGE_PREFIX}ai-provider`)) {
       localStorage.setItem(`${STORAGE_PREFIX}ai-provider`, 'openrouter')
     }
+  }
+
+  // Reset any previously-stored invalid model ID to the current default
+  const storedModel = localStorage.getItem(`${STORAGE_PREFIX}ai-model`)
+  if (storedModel && INVALID_MODEL_IDS.has(storedModel)) {
+    localStorage.setItem(`${STORAGE_PREFIX}ai-model`, DEFAULT_AI_MODEL)
   }
 }
 
