@@ -135,7 +135,7 @@ export const getDesignTokens = defineTool({
     const spacings = new Map<number, number>()
     const radii = new Map<number, number>()
 
-    const pageId = args.page_id ?? figma.currentPage.id
+    const pageId = args.page_id === 'current' ? figma.currentPage.id : (args.page_id ?? figma.currentPage.id)
     const page = figma.getNodeById(pageId)
     if (!page) {
       return {
